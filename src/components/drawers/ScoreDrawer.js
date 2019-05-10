@@ -4,31 +4,34 @@ const classNames = require('classnames')
 
 const Drawer = require('./Drawer')
 
+const t = require('../../i18n').context('ScoreDrawer')
 const helper = require('../../modules/helper')
 const setting = remote.require('./setting')
 
 class ScoreRow extends Component {
-    render({method, score, komi, sign}) {
+    render({method, score, komi, handicap, sign}) {
         let index = sign > 0 ? 0 : 1
 
-        let total = method === 'area' ? score.area[index]
+        let total = !score ? 0 : method === 'area' ? score.area[index]
             : score.territory[index] + score.captures[index]
 
         if (sign < 0) total += komi
+        if (method === 'area' && sign < 0) total += handicap
 
         return h('tr', {},
             h('th', {},
                 h('img', {
                     src: `./node_modules/@sabaki/shudan/css/stone_${sign}.png`,
-                    alt: sign > 0 ? 'Black' : 'White',
+                    alt: sign > 0 ? t('黑') : t('白'),
                     width: 24,
                     height: 24
                 })
             ),
-            h('td', {class: classNames({disabled: method === 'territory'})}, score.area[index]),
-            h('td', {class: classNames({disabled: method === 'area'})}, score.territory[index]),
-            h('td', {class: classNames({disabled: method === 'area'})}, score.captures[index]),
+            h('td', {class: classNames({disabled: method === 'territory'})}, score ? score.area[index] : '-'),
+            h('td', {class: classNames({disabled: method === 'area'})}, score ? score.territory[index] : '-'),
+            h('td', {class: classNames({disabled: method === 'area'})}, score ? score.captures[index] : '-'),
             h('td', {}, sign < 0 ? komi : '-'),
+            h('td', {class: classNames({disabled: method === 'territory'})}, sign < 0 ? handicap : '-'),
             h('td', {}, total)
         )
     }
@@ -55,14 +58,16 @@ class ScoreDrawer extends Component {
         return areaMap != null
     }
 
-    render({show, estimating, method, areaMap, board, komi}) {
+    render({show, estimating, method, areaMap, board, komi, handicap}) {
         if (isNaN(komi)) komi = 0
+        if (isNaN(handicap)) handicap = 0
 
-        let score = board ? board.getScore(areaMap) : {area: [], territory: [], captures: []}
-        let result = method === 'area' ? score.area[0] - score.area[1] - komi
-            : score.territory[0] - score.territory[1] + score.captures[0] - score.captures[1] - komi
+        let score = board && board.getScore(areaMap, {handicap, komi})
+        let result = score && (method === 'area' ? score.areaScore : score.territoryScore)
 
-        this.resultString = result > 0 ? `黑胜 ${result}` : result < 0 ? `白胜 ${-result}` : '和棋'
+        this.resultString = result > 0 ? t(p => `黑胜 B+${p.result}`, {result})
+            : result < 0 ? t(p => `白胜 W+${p.result}`, {result: -result})
+            : t('和棋')
 
         return h(Drawer,
             {
@@ -77,45 +82,46 @@ class ScoreDrawer extends Component {
                     h('a', {
                         href: '#',
                         onClick: this.handleAreaButtonClick
-                    }, '数子')
+                    }, t('数子'))
                 ),
                 h('li', {class: classNames({current: method === 'territory'})},
                     h('a', {
                         href: '#',
                         onClick: this.handleTerritoryButtonClick
-                    }, '数目')
+                    }, t('数目'))
                 )
             ),
 
             h('table', {},
                 h('thead', {}, h('tr', {},
                     h('th'),
-                    h('th', {disabled: method === 'territory'}, '子数'),
-                    h('th', {disabled: method === 'area'}, '目数'),
-                    h('th', {disabled: method === 'area'}, '提子'),
-                    h('th', {}, '贴目'),
-                    h('th', {}, '总计')
+                    h('th', {disabled: method === 'territory'}, t('子数')),
+                    h('th', {disabled: method === 'area'}, t('目数')),
+                    h('th', {disabled: method === 'area'}, t('提子')),
+                    h('th', {}, t('贴目')),
+                    h('th', {disabled: method === 'territory'}, t('贴子')),
+                    h('th', {}, t('总计'))
                 )),
                 h('tbody', {},
-                    h(ScoreRow, {method, score, komi, sign: 1}),
-                    h(ScoreRow, {method, score, komi, sign: -1})
+                    h(ScoreRow, {method, score, komi, handicap: 0, sign: 1}),
+                    h(ScoreRow, {method, score, komi, handicap, sign: -1})
                 )
             ),
 
             h('form', {},
                 h('p', {},
-                    '结果: ',
+                    t('结果:'), ' ',
                     h('span', {class: 'result'}, this.resultString), ' ',
 
                     !estimating && h('button', {
                         type: 'submit',
                         onClick: this.handleSubmitButtonClick
-                    }, '更新结果'), ' ',
+                    }, t('更新结果')), ' ',
 
                     h('button', {
                         type: 'reset',
                         onClick: this.handleCloseButtonClick
-                    }, '关闭')
+                    }, t('关闭'))
                 )
             )
         )

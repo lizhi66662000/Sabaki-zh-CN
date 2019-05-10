@@ -1,11 +1,11 @@
 const {remote} = require('electron')
 const {h, Component} = require('preact')
 const classNames = require('classnames')
-const sgf = require('@sabaki/sgf')
 
 const MiniGoban = require('../MiniGoban')
 const Drawer = require('./Drawer')
 
+const t = require('../../i18n').context('GameChooserDrawer')
 const dialog = require('../../modules/dialog')
 const fileformats = require('../../modules/fileformats')
 const gametree = require('../../modules/gametree')
@@ -18,9 +18,10 @@ let itemMinWidth = thumbnailSize + 12 + 20
 let itemHeight = 253 + 10 + 20
 
 let getPreviewBoard = tree => {
-    let tp = gametree.navigate(tree, 0, 30)
-    if (!tp) tp = gametree.navigate(tree, 0, gametree.getCurrentHeight(tree) - 1)
-    return gametree.getBoard(...tp)
+    let node = tree.navigate(tree.root.id, 30, {})
+    if (!node) node = tree.navigate(tree.root.id, tree.getCurrentHeight({}) - 1, {})
+
+    return gametree.getBoard(tree, node.id)
 }
 
 class GameListItem extends Component {
@@ -77,8 +78,8 @@ class GameListItem extends Component {
                     visible: showThumbnail
                 }),
 
-                h('span', {class: 'black', title: blackRank}, blackName || '黑'),
-                h('span', {class: 'white', title: whiteRank}, whiteName || '白')
+                h('span', {class: 'black', title: blackRank}, blackName || t('Black')),
+                h('span', {class: 'white', title: whiteRank}, whiteName || t('White'))
             )
         )
     }
@@ -108,14 +109,14 @@ class GameChooserDrawer extends Component {
         }
 
         this.handleItemContextMenu = evt => {
-            let template = [
+            helper.popupMenu([
                 {
-                    label: '&删除对局',
+                    label: t('删除对局'),
                     click: () => {
                         if (dialog.showMessageBox(
-                            '你真的想永久删除此对局吗？',
+                            t('你真的想永久删除此对局吗？'),
                             'warning',
-                            ['确认', '取消'], 1
+                            [t('删除对局'), t('取消')], 1
                         ) === 1) return
 
                         let {gameTrees, onChange = helper.noop} = this.props
@@ -125,21 +126,19 @@ class GameChooserDrawer extends Component {
                     }
                 },
                 {
-                    label: '&删除其它对局',
+                    label: t('删除其它对局'),
                     click: () => {
                         if (dialog.showMessageBox(
-                            '你真的想永久删除所有其它对局吗？',
+                            t('你真的想永久删除所有其它对局吗？'),
                             'warning',
-                            ['确认', '取消'], 1
+                            [t('删除对局'), t('取消')], 1
                         ) === 1) return
 
                         let {onChange = helper.noop} = this.props
                         onChange({gameTrees: [evt.tree]})
                     }
                 }
-            ]
-
-            helper.popupMenu(template, evt.clientX, evt.clientY)
+            ], evt.clientX, evt.clientY)
         }
 
         this.handleItemDragStart = evt => {
@@ -188,20 +187,16 @@ class GameChooserDrawer extends Component {
         }
 
         this.handleItemClick = evt => {
-            let {gameTrees} = this.props
             let {onItemClick = helper.noop} = this.props
-            let index = gameTrees.indexOf(evt.tree)
 
             evt.selectedTree = evt.tree
-            evt.selectedIndex = index
-
             onItemClick(evt)
         }
 
         this.handleAddButtonClick = evt => {
             let template = [
                 {
-                    label: '&添加新对局',
+                    label: t('添加新对局'),
                     click: () => {
                         let tree = sabaki.getEmptyGameTree()
                         let {gameTrees, onChange = helper.noop} = this.props
@@ -210,11 +205,14 @@ class GameChooserDrawer extends Component {
                     }
                 },
                 {
-                    label: '&添加现有文件…',
+                    label: t('添加现有文件…'),
                     click: () => {
                         dialog.showOpenDialog({
                             properties: ['openFile', 'multiSelections'],
-                            filters: [...fileformats.meta, {name: 'All Files', extensions: ['*']}]
+                            filters: [
+                                ...fileformats.meta,
+                                {name: t('所有文件'), extensions: ['*']}
+                            ]
                         }, ({result}) => {
                             let {gameTrees, onChange = helper.noop} = this.props
                             let newTrees = []
@@ -228,7 +226,7 @@ class GameChooserDrawer extends Component {
                                         newTrees.push(...trees)
                                     }
                                 } catch (err) {
-                                    dialog.showMessageBox('某些文件无法读取。', 'warning')
+                                    dialog.showMessageBox(t('有些文件不可读。'), 'warning')
                                 }
                             }
 
@@ -246,30 +244,27 @@ class GameChooserDrawer extends Component {
         }
 
         this.handleSortButtonClick = evt => {
-            let sortWith = (sorter) => {
-                return () => {
-                    sabaki.setBusy(true)
+            let sortWith = (sorter) => () => {
+                sabaki.setBusy(true)
 
-                    let {gameTrees, onChange = helper.noop} = this.props
+                let {gameTrees, onChange = helper.noop} = this.props
+                let newGameTrees = sorter(gameTrees.slice())
 
-                    gameTrees = sorter(gameTrees)
-
-                    onChange({gameTrees})
-                    sabaki.setBusy(false)
-                }
+                onChange({gameTrees: newGameTrees})
+                sabaki.setBusy(false)
             }
 
             let template = [
-                {label: '&执黑', click: sortWith(gamesort.byPlayerBlack)},
-                {label: '&执白', click: sortWith(gamesort.byPlayerWhite)},
-                {label: '&黑等级', click: sortWith(gamesort.byBlackRank)},
-                {label: '&白等级', click: sortWith(gamesort.byWhiteRank)},
-                {label: '&对局名称', click: sortWith(gamesort.byGameName)},
-                {label: '&赛事', click: sortWith(gamesort.byEvent)},
-                {label: '&日期', click: sortWith(gamesort.byDate)},
-                {label: '&棋局手数', click: sortWith(gamesort.byNumberOfMoves)},
+                {label: t('执黑'), click: sortWith(gamesort.byPlayerBlack)},
+                {label: t('执白'), click: sortWith(gamesort.byPlayerWhite)},
+                {label: t('黑等级'), click: sortWith(gamesort.byBlackRank)},
+                {label: t('白等级'), click: sortWith(gamesort.byWhiteRank)},
+                {label: t('对局名称'), click: sortWith(gamesort.byGameName)},
+                {label: t('赛事'), click: sortWith(gamesort.byEvent)},
+                {label: t('日期'), click: sortWith(gamesort.byDate)},
+                {label: t('棋局手数'), click: sortWith(gamesort.byNumberOfMoves)},
                 {type: 'separator'},
-                {label: '&反向', click: sortWith(gamesort.reverse)}
+                {label: t('反向'), click: sortWith(gamesort.reverse)}
             ]
 
             let element = evt.currentTarget
@@ -290,16 +285,18 @@ class GameChooserDrawer extends Component {
         return animation !== this.state.animation || show || show !== this.props.show
     }
 
-    componentDidUpdate(prevProps, prevState) {
-        if (this.state.scrollTop !== prevState.scrollTop
-        && this.state.scrollTop !== this.gamesListElement.scrollTop) {
+    async componentDidUpdate(prevProps, prevState) {
+        if (
+            this.state.scrollTop !== prevState.scrollTop
+            && this.state.scrollTop !== this.gamesListElement.scrollTop
+        ) {
             // Update scroll top
 
             this.gamesListElement.scrollTop = this.state.scrollTop
             this.setState({scrollTop: this.gamesListElement.scrollTop})
         }
 
-        if (this.props.show && prevProps.gameTrees.length !== this.props.gameTrees.length) {
+        if (this.props.show && prevProps.gameTrees.length < this.props.gameTrees.length) {
             // Scroll down
 
             this.gamesListElement.scrollTop = this.gamesListElement.scrollHeight
@@ -308,6 +305,8 @@ class GameChooserDrawer extends Component {
 
         if (!prevProps.show && this.props.show) {
             // Scroll current list element into view
+
+            await this.resize()
 
             let index = this.shownGameTrees.findIndex(([, i]) => i === this.props.gameIndex)
             let scrollTop = 0
@@ -344,12 +343,14 @@ class GameChooserDrawer extends Component {
         }
     }
 
-    resize() {
+    async resize() {
         let innerWidth = this.gamesListElement.offsetWidth - 28
         let height = this.gamesListElement.offsetHeight
         let rowCount = Math.floor(innerWidth / itemMinWidth)
 
-        this.setState({innerWidth, height, rowCount})
+        return new Promise(resolve => {
+            this.setState({innerWidth, height, rowCount}, resolve)
+        })
     }
 
     getRowFromIndex(i) {
@@ -414,12 +415,12 @@ class GameChooserDrawer extends Component {
                     show
                 },
 
-                h('h2', {}, '对局管理'),
+                h('h2', {}, t('对局管理')),
 
                 h('input', {
                     type: 'search',
                     name: 'filter',
-                    placeholder: '过滤',
+                    placeholder: t('过滤'),
                     value: filterText,
                     onInput: this.handleFilterTextChange
                 }),
@@ -440,9 +441,13 @@ class GameChooserDrawer extends Component {
                         let itemTop = row * itemHeight + 10
                         let itemLeft = (i - row * rowCount) * itemWidth + 10
 
-                        if (index !== gameIndex
-                        && (itemTop + itemHeight * 2 <= scrollTop || itemTop - itemHeight >= scrollTop + height))
-                            return
+                        if (
+                            index !== gameIndex
+                            && (
+                                itemTop + itemHeight * 2 <= scrollTop
+                                || itemTop - itemHeight >= scrollTop + height
+                            )
+                        ) return
 
                         return h(GameListItem, {
                             ref: item => {
@@ -472,18 +477,18 @@ class GameChooserDrawer extends Component {
                         type: 'button',
                         class: 'dropdown',
                         onClick: this.handleAddButtonClick
-                    }, '添加'),
+                    }, t('添加')),
 
                     h('button', {
                         type: 'button',
                         class: 'dropdown',
                         onClick: this.handleSortButtonClick
-                    }, '排序方式'),
+                    }, t('排序方式')),
 
                     h('button', {
                         type: 'button',
                         onClick: this.handleCloseButtonClick
-                    }, '关闭')
+                    }, t('关闭'))
                 )
             ),
 

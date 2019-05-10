@@ -2,6 +2,9 @@ const {h, Component} = require('preact')
 const classNames = require('classnames')
 const {remote} = require('electron')
 
+const TextSpinner = require('../TextSpinner')
+
+const t = require('../../i18n').context('PlayBar')
 const helper = require('../../modules/helper')
 const setting = remote.require('./setting')
 
@@ -10,47 +13,44 @@ class PlayBar extends Component {
         super()
 
         this.handleCurrentPlayerClick = () => this.props.onCurrentPlayerClick
-        this.handleUndoButtonClick = () => sabaki.undo()
 
         this.handleMenuClick = () => {
-            let template = [
+            let {left, top} = this.menuButtonElement.getBoundingClientRect()
+            helper.popupMenu([
                 {
-                    label: '&Pass(通过)一手',
+                    label: t('通过一手'),
                     click: () => {
                         let autoGenmove = setting.get('gtp.auto_genmove')
                         sabaki.makeMove([-1, -1], {sendToEngine: autoGenmove})
                     }
                 },
                 {
-                    label: '&认输',
+                    label: t('认输'),
                     click: () => sabaki.makeResign()
                 },
                 {type: 'separator'},
                 {
-                    label: '&估算(形势判断)',
+                    label: t('估算-形势判断'),
                     click: () => sabaki.setMode('estimator')
                 },
                 {
-                    label: '&比分(点目)',
+                    label: t('比分-点目'),
                     click: () => sabaki.setMode('scoring')
                 },
                 {
-                    label: '&编辑',
+                    label: t('编辑'),
                     click: () => sabaki.setMode('edit')
                 },
                 {
-                    label: '&查找',
+                    label: t('查找'),
                     click: () => sabaki.setMode('find')
                 },
                 {type: 'separator'},
                 {
-                    label: '&对局 信息',
+                    label: t('对局信息'),
                     click: () => sabaki.openDrawer('info')
                 }
-            ]
-
-            let {left, top} = this.menuButtonElement.getBoundingClientRect()
-            helper.popupMenu(template, left, top)
+            ], left, top)
         }
     }
 
@@ -61,13 +61,12 @@ class PlayBar extends Component {
     render({
         mode,
         attachedEngines,
+        playerBusy,
         playerNames,
         playerRanks,
         playerCaptures,
         currentPlayer,
         showHotspot,
-        undoable,
-        undoText,
 
         onCurrentPlayerClick = helper.noop
     }) {
@@ -85,7 +84,6 @@ class PlayBar extends Component {
         return h('header',
             {
                 class: classNames({
-                    undoable,
                     hotspot: showHotspot,
                     current: mode === 'play'
                 })
@@ -93,21 +91,43 @@ class PlayBar extends Component {
 
             h('span', {id: 'player_1'},
                 h('span', {class: 'captures', style: captureStyle(0)}, playerCaptures[0]), ' ',
-                playerRanks[0] && h('span', {class: 'rank'}, playerRanks[0]), ' ',
 
-                h('span', {
-                    class: classNames('name', {engine: isEngine[0]}),
-                    title: isEngine[0] && 'Engine'
-                }, playerNames[0] || '  黑  ')
+                playerRanks[0] && h('span',
+                    {class: 'rank'},
+                    t(p => p.playerRank, {
+                        playerRank: playerRanks[0]
+                    })
+                ), ' ',
+
+                h('span',
+                    {
+                        class: classNames('name', {engine: isEngine[0]}),
+                        title: isEngine[0] && t('Engine')
+                    },
+                    isEngine[0] && playerBusy[0] && h(TextSpinner),
+                    ' ',
+                    playerNames[0] || t('黑')
+                )
             ),
 
             h('span', {id: 'player_-1'},
-                h('span', {
-                    class: classNames('name', {engine: isEngine[1]}),
-                    title: isEngine[1] && 'Engine'
-                }, playerNames[1] || '  白  '), ' ',
+                h('span',
+                    {
+                        class: classNames('name', {engine: isEngine[1]}),
+                        title: isEngine[1] && t('Engine')
+                    },
+                    playerNames[1] || t('白'),
+                    ' ',
+                    isEngine[1] && playerBusy[1] && h(TextSpinner)
+                ), ' ',
 
-                playerRanks[1] && h('span', {class: 'rank'}, playerRanks[1]), ' ',
+                playerRanks[1] && h('span',
+                    {class: 'rank'},
+                    t(p => p.playerRank, {
+                        playerRank: playerRanks[1]
+                    })
+                ), ' ',
+
                 h('span', {class: 'captures', style: captureStyle(1)}, playerCaptures[1])
             ),
 
@@ -115,20 +135,11 @@ class PlayBar extends Component {
                 src: `./img/ui/player_${currentPlayer}.svg`,
                 class: 'current-player',
                 height: 22,
-                title: 'Change Player',
+                title: t('更改对局者'),
                 onClick: onCurrentPlayerClick
             }),
 
-            h('div', {class: 'hotspot', title: 'Hotspot'}),
-
-            h('a',
-                {
-                    class: 'undo',
-                    title: undoText,
-                    onClick: this.handleUndoButtonClick
-                },
-                h('img', {src: './node_modules/octicons/build/svg/reply.svg', height: 21})
-            ),
+            h('div', {class: 'hotspot', title: t('热点')}),
 
             h('a',
                 {

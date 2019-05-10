@@ -6,7 +6,7 @@ const sgf = require('@sabaki/sgf')
 
 const Drawer = require('./Drawer')
 
-const gametree = require('../../modules/gametree')
+const t = require('../../i18n').context('InfoDrawer')
 const helper = require('../../modules/helper')
 const setting = remote.require('./setting')
 
@@ -29,11 +29,11 @@ class InfoDrawer extends Component {
         this.handleSubmitButtonClick = async evt => {
             evt.preventDefault()
 
-            let [tree, index] = this.props.treePosition
-            let emptyTree = !tree.parent && tree.nodes.length === 1 && tree.subtrees.length === 0
-
-            let keys = ['blackName', 'blackRank', 'whiteName', 'whiteRank',
-                'gameName', 'eventName', 'date', 'result', 'komi']
+            let emptyTree = this.props.gameTree.root.children.length === 0
+            let keys = [
+                'blackName', 'blackRank', 'whiteName', 'whiteRank',
+                'gameName', 'eventName', 'date', 'result', 'komi'
+            ]
 
             let data = keys.reduce((acc, key) => {
                 acc[key] = Array.isArray(this.state[key])
@@ -46,7 +46,7 @@ class InfoDrawer extends Component {
                 data.size = this.state.size
             }
 
-            sabaki.setGameInfo(this.props.treePosition[0], data)
+            sabaki.setGameInfo(this.props.gameTree, data)
             sabaki.closeDrawer()
             sabaki.attachEngines(...this.state.engines)
 
@@ -143,7 +143,7 @@ class InfoDrawer extends Component {
 
             let template = [
                 {
-                    label: '人类',
+                    label: t('人类'),
                     type: 'checkbox',
                     checked: this.state.engines[index] == null,
                     click: () => {
@@ -160,7 +160,7 @@ class InfoDrawer extends Component {
                 },
                 {type: 'separator'},
                 ...engines.map(engine => ({
-                    label: engine.name.trim() || '(未命名引擎)',
+                    label: engine.name.trim() || t('(未命名引擎)'),
                     type: 'checkbox',
                     checked: engine === this.state.engines[index],
                     click: () => {
@@ -175,7 +175,7 @@ class InfoDrawer extends Component {
                 })),
                 engines.length > 0 && {type: 'separator'},
                 {
-                    label: '管理引擎…',
+                    label: t('管理引擎…'),
                     click: () => {
                         sabaki.setState({preferencesTab: 'engines'})
                         sabaki.openDrawer('preferences')
@@ -193,13 +193,21 @@ class InfoDrawer extends Component {
         if (!this.props.show && show) {
             this.setState(Object.assign({}, gameInfo, {
                 engines: [...engines],
-                showResult: !gameInfo.result || gameInfo.result.trim() === '' || setting.get('app.always_show_result') === true
+                showResult: !gameInfo.result
+                    || gameInfo.result.trim() === ''
+                    || setting.get('app.always_show_result') === true
             }))
         }
     }
 
     componentDidMount() {
         this.preparePikaday()
+    }
+
+    componentDidUpdate(prevProps) {
+        if (!prevProps.show && this.props.show) {
+            this.firstFocusElement.focus()
+        }
     }
 
     shouldComponentUpdate({show}) {
@@ -245,6 +253,13 @@ class InfoDrawer extends Component {
             firstDay: 1,
             yearRange: 6,
             keyboardInput: false,
+            i18n: {
+                previousMonth: t('Previous Month'),
+                nextMonth: t('Next Month'),
+                months: [t('January'), t('February'), t('March'), t('April'), t('May'), t('June'), t('July'), t('August'), t('September'), t('October'), t('November'), t('December')],
+                weekdays: [t('Sunday'), t('Monday'), t('Tuesday'), t('Wednesday'), t('Thursday'), t('Friday'), t('Saturday')],
+                weekdaysShort: [t('Sun'), t('Mon'), t('Tue'), t('Wed'), t('Thu'), t('Fri'), t('Sat')]
+            },
 
             onOpen: () => {
                 if (!this.pikaday) return
@@ -302,7 +317,7 @@ class InfoDrawer extends Component {
     }
 
     render({
-        treePosition,
+        gameTree,
         currentPlayer,
         show
     }, {
@@ -320,8 +335,7 @@ class InfoDrawer extends Component {
         handicap = 0,
         size = [null, null]
     }) {
-        let [tree, index] = treePosition
-        let emptyTree = !tree.parent && tree.nodes.length === 1 && tree.subtrees.length === 0
+        let emptyTree = gameTree.root.children.length === 0
 
         return h(Drawer,
             {
@@ -333,6 +347,7 @@ class InfoDrawer extends Component {
                 h('section', {},
                     h('span', {},
                         h('img', {
+                            tabIndex: 0,
                             src: './node_modules/octicons/build/svg/chevron-down.svg',
                             width: 16,
                             height: 16,
@@ -343,15 +358,16 @@ class InfoDrawer extends Component {
                         h('input', {
                             type: 'text',
                             name: 'rank_1',
-                            placeholder: '等级',
+                            placeholder: t('等级'),
                             value: blackRank,
                             onInput: this.handleInputChange.blackRank
                         }),
 
                         h('input', {
+                            ref: el => this.firstFocusElement = el,
                             type: 'text',
                             name: 'name_1',
-                            placeholder: '黑',
+                            placeholder: t('黑'),
                             value: blackName,
                             onInput: this.handleInputChange.blackName
                         })
@@ -361,7 +377,7 @@ class InfoDrawer extends Component {
                         class: 'current-player',
                         src: `./img/ui/player_${currentPlayer}.svg`,
                         height: 31,
-                        title: 'Swap',
+                        title: t('交换'),
                         onClick: this.handleSwapPlayers
                     }),
 
@@ -369,7 +385,7 @@ class InfoDrawer extends Component {
                         h('input', {
                             type: 'text',
                             name: 'name_-1',
-                            placeholder: '白',
+                            placeholder: t('白'),
                             value: whiteName,
                             onInput: this.handleInputChange.whiteName
                         }),
@@ -377,12 +393,13 @@ class InfoDrawer extends Component {
                         h('input', {
                             type: 'text',
                             name: 'rank_-1',
-                            placeholder: '等级',
+                            placeholder: t('等级'),
                             value: whiteRank,
                             onInput: this.handleInputChange.whiteRank
                         }), ' ',
 
                         h('img', {
+                            tabIndex: 0,
                             src: './node_modules/octicons/build/svg/chevron-down.svg',
                             width: 16,
                             height: 16,
@@ -393,27 +410,27 @@ class InfoDrawer extends Component {
                 ),
 
                 h('ul', {},
-                    h(InfoDrawerItem, {title: '名称'},
+                    h(InfoDrawerItem, {title: t('名称 ')},
                         h('input', {
                             type: 'text',
-                            placeholder: '(未命名)',
+                            placeholder: t('（未命名）'),
                             value: gameName,
                             onInput: this.handleInputChange.gameName
                         })
                     ),
-                    h(InfoDrawerItem, {title: '赛事'},
+                    h(InfoDrawerItem, {title: t('赛事 ')},
                         h('input', {
                             type: 'text',
-                            placeholder: '无',
+                            placeholder: t('无'),
                             value: eventName,
                             onInput: this.handleInputChange.eventName
                         })
                     ),
-                    h(InfoDrawerItem, {title: '日期'},
+                    h(InfoDrawerItem, {title: t('日期 ')},
                         h('input', {
                             ref: el => this.dateInputElement = el,
                             type: 'text',
-                            placeholder: 'None',
+                            placeholder: t('无'),
                             value: date,
 
                             onFocus: this.handleDateInputFocus,
@@ -421,7 +438,7 @@ class InfoDrawer extends Component {
                             onInput: this.handleDateInputChange
                         })
                     ),
-                    h(InfoDrawerItem, {title: '贴目'},
+                    h(InfoDrawerItem, {title: t('贴目 ')},
                         h('input', {
                             type: 'number',
                             name: 'komi',
@@ -431,20 +448,20 @@ class InfoDrawer extends Component {
                             onInput: this.handleInputChange.komi
                         })
                     ),
-                    h(InfoDrawerItem, {title: '结果'},
+                    h(InfoDrawerItem, {title: t('结果 ')},
                         showResult
                         ? h('input', {
                             type: 'text',
-                            placeholder: '无',
+                            placeholder: t('无'),
                             value: result,
                             onInput: this.handleInputChange.result
                         })
                         : h('button', {
                             type: 'button',
                             onClick: this.handleShowResultClick
-                        }, 'Show')
+                        }, t('Show'))
                     ),
-                    h(InfoDrawerItem, {title: '让子'},
+                    h(InfoDrawerItem, {title: t('让子 ')},
                         h('select',
                             {
                                 selectedIndex: Math.max(0, handicap - 1),
@@ -452,13 +469,15 @@ class InfoDrawer extends Component {
                                 onChange: this.handleInputChange.handicap
                             },
 
-                            h('option', {value: 0}, '不让子'),
+                            h('option', {value: 0}, t('不让子')),
                             [...Array(8)].map((_, i) =>
-                                h('option', {value: i + 2}, (i + 2) + '  子')
+                                h('option', {value: i + 2}, t(p => `${p.stones} stones`, {
+                                    stones: i + 2
+                                }))
                             )
                         )
                     ),
-                    h(InfoDrawerItem, {title: '棋盘大小'},
+                    h(InfoDrawerItem, {title: t('棋盘大小 ')},
                         h('input', {
                             type: 'number',
                             name: 'size-width',
@@ -472,7 +491,7 @@ class InfoDrawer extends Component {
                         }), ' ',
 
                         h('span', {
-                            title: 'Swap',
+                            title: t('交换'),
                             style: {cursor: emptyTree ? 'pointer': 'default'},
                             onClick: !emptyTree ? helper.noop : this.handleSizeSwapButtonClick
                         }, '×'), ' ',
@@ -491,8 +510,8 @@ class InfoDrawer extends Component {
                 ),
 
                 h('p', {},
-                    h('button', {type: 'submit', onClick: this.handleSubmitButtonClick}, '确认'), ' ',
-                    h('button', {type: 'reset', onClick: this.handleCancelButtonClick}, '取消')
+                    h('button', {type: 'submit', onClick: this.handleSubmitButtonClick}, t('确认')), ' ',
+                    h('button', {type: 'reset', onClick: this.handleCancelButtonClick}, t('取消'))
                 )
             )
         )

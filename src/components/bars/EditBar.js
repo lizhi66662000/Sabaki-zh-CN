@@ -3,6 +3,7 @@ const classNames = require('classnames')
 
 const Bar = require('./Bar')
 const helper = require('../../modules/helper')
+const t = require('../../i18n').context('EditBar')
 
 class EditBar extends Component {
     constructor() {
@@ -61,15 +62,15 @@ class EditBar extends Component {
         return h(Bar, Object.assign({type: 'edit'}, this.props),
             h('ul', {},
                 [
-                    ['棋子工具', `stone_${stoneTool}`],
-                    ['交叉工具', 'cross'],
-                    ['三角工具', 'triangle'],
-                    ['方形工具', 'square'],
-                    ['圆形工具', 'circle'],
-                    ['线工具', 'line'],
-                    ['箭头工具', 'arrow'],
-                    ['标签工具', 'label'],
-                    ['数字工具', 'number']
+                    [t('棋子工具'), `stone_${stoneTool}`],
+                    [t('交叉工具'), 'cross'],
+                    [t('三角工具'), 'triangle'],
+                    [t('方形工具'), 'square'],
+                    [t('圆形工具'), 'circle'],
+                    [t('线工具'), 'line'],
+                    [t('箭头工具'), 'arrow'],
+                    [t('标签工具'), 'label'],
+                    [t('数字工具'), 'number']
                 ].map(x =>
                     this.renderButton(...x, isSelected(x))
                 )

@@ -73,19 +73,6 @@ class Board {
         return Math.abs(v[0] - w[0]) + Math.abs(v[1] - w[1])
     }
 
-    getDistanceToGround(vertex) {
-        return this.getCanonicalVertex(vertex)[0]
-    }
-
-    getCanonicalVertex(vertex) {
-        if (!this.hasVertex(vertex)) return [-1, -1]
-
-        let boardSize = [this.width, this.height]
-
-        return vertex.map((x, i) => Math.min(x, boardSize[i] - x - 1))
-            .sort((x, y) => x - y)
-    }
-
     getNeighbors(vertex, ignoreBoard = false) {
         if (!ignoreBoard && !this.hasVertex(vertex)) return []
 
@@ -164,7 +151,7 @@ class Board {
         return area.filter(v => this.get(v) === this.get(vertex))
     }
 
-    getScore(areaMap) {
+    getScore(areaMap, {komi = 0, handicap = 0} = {}) {
         let score = {
             area: [0, 0],
             territory: [0, 0],
@@ -182,6 +169,10 @@ class Board {
                 if (this.get([x, y]) === 0) score.territory[index]++
             }
         }
+
+        score.areaScore = score.area[0] - score.area[1] - komi - handicap
+        score.territoryScore = score.territory[0] - score.territory[1]
+            + score.captures[0] - score.captures[1] - komi
 
         return score
     }

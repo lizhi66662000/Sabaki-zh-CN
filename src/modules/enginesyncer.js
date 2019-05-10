@@ -16,7 +16,8 @@ const defaultStateJSON = JSON.stringify({
 })
 
 function coord2vertex(coord, size) {
-    if (coord === 'pass') return null
+    if (coord == null || coord === 'resign') return null
+    if (coord === 'pass') return [-1, -1]
 
     let x = alpha.indexOf(coord[0].toUpperCase())
     let y = size - +coord.slice(1)
@@ -30,8 +31,8 @@ class EngineSyncer extends EventEmitter {
 
         let {path, args, commands} = engine
 
+        this._busy = false
         this.engine = engine
-        this.initialized = false
         this.commands = []
         this.state = JSON.parse(defaultStateJSON)
 
@@ -40,26 +41,27 @@ class EngineSyncer extends EventEmitter {
         })
 
         this.controller.on('started', () => {
-            this.controller.sendCommand({name: 'name'})
-            this.controller.sendCommand({name: 'version'})
-            this.controller.sendCommand({name: 'protocol_version'})
-            this.controller.sendCommand({name: 'list_commands'}).then(response => {
-                this.commands = response.content.split('\n')
-            }).then(() => {
-                this.initialized = true
-                this.emit('engine-initialized')
-            })
-
-            if (commands == null || commands.trim() === '') return
-
-            for (let command of commands.split(';').filter(x => x.trim() !== '')) {
-                this.controller.sendCommand(gtp.Command.fromString(command))
-            }
+            Promise.all([
+                this.controller.sendCommand({name: 'name'}),
+                this.controller.sendCommand({name: 'version'}),
+                this.controller.sendCommand({name: 'protocol_version'}),
+                this.controller.sendCommand({name: 'list_commands'}).then(response => {
+                    this.commands = response.content.split('\n')
+                }),
+                ...(
+                    commands != null
+                    && commands.trim() !== ''
+                    ? commands.split(';').filter(x => x.trim() !== '').map(command =>
+                        this.controller.sendCommand(gtp.Command.fromString(command))
+                    )
+                    : []
+                )
+            ]).catch(helper.noop)
         })
 
         this.controller.on('stopped', () => {
-            this.initialized = false
             this.state = JSON.parse(defaultStateJSON)
+            this.busy = false
         })
 
         this.controller.on('command-sent', async ({command, getResponse, subscribe}) => {
@@ -67,9 +69,15 @@ class EngineSyncer extends EventEmitter {
 
             let res = null
 
+            this.busy = this.controller.busy
+
             if (!['lz-genmove_analyze', 'genmove_analyze'].includes(command.name)) {
-                res = await getResponse()
-                if (res.error) return
+                try {
+                    res = await getResponse()
+                    if (res.error) return
+                } catch (err) {
+                    return
+                }
             }
 
             if (command.name === 'boardsize' && command.args.length >= 1) {
@@ -97,25 +105,28 @@ class EngineSyncer extends EventEmitter {
                 let vertex = coord2vertex(command.args[1], this.state.size)
 
                 if (vertex) this.state.moves.push({sign, vertex})
-            } else if (command.name === 'genmove' && command.args.length >= 1) {
-                let sign = command.args[0][0].toLowerCase() === 'w' ? -1 : 1
-                let vertex = coord2vertex(res.content.trim(), this.state.size)
-
-                if (vertex) this.state.moves.push({sign, vertex})
             } else if (
-                ['lz-genmove_analyze', 'genmove_analyze'].includes(command.name)
-                && command.args.length >= 1
+                [
+                    'genmove',
+                    'lz-genmove_analyze',
+                    'genmove_analyze'
+                ].includes(command.name) && command.args.length >= 1
             ) {
                 let sign = command.args[0][0].toLowerCase() === 'w' ? -1 : 1
-                let vertex = await new Promise(resolve => {
-                    getResponse().then(() => resolve(null))
+                let coord = !command.name.includes('analyze')
+                    ? res.content.trim()
+                    : await new Promise(resolve => {
+                        getResponse()
+                        .then(() => resolve(null))
+                        .catch(() => resolve(null))
 
-                    subscribe(({line}) => {
-                        let match = line.trim().match(/^play (.*)$/)
-                        if (match) resolve(coord2vertex(match[1], this.state.size))
+                        subscribe(({line}) => {
+                            let match = line.trim().match(/^play (.*)$/)
+                            if (match) resolve(match[1])
+                        })
                     })
-                })
 
+                let vertex = coord2vertex(coord, this.state.size)
                 if (vertex) this.state.moves.push({sign, vertex})
             } else if (command.name === 'undo') {
                 this.state.moves.length -= 1
@@ -123,33 +134,50 @@ class EngineSyncer extends EventEmitter {
                 this.state.dirty = true
             }
         })
+
+        this.controller.on('response-received', () => {
+            this.busy = this.controller.busy
+        })
     }
 
-    async sync(treePosition) {
+    get busy() {
+        return this._busy
+    }
+
+    set busy(value) {
+        if (value !== this._busy) {
+            this._busy = value
+            this.emit('busy-changed')
+        }
+    }
+
+    async sync(tree, id) {
         let controller = this.controller
-        let rootTree = gametree.getRoot(treePosition[0])
-        let board = gametree.getBoard(...treePosition)
+        let board = gametree.getBoard(tree, id)
 
         if (!board.isSquare()) {
-            throw new Error('GTP引擎不支持非方形棋盘。')
+            throw new Error('GTP 引擎不支持非方形棋盘。')
         } else if (!board.isValid()) {
             throw new Error('GTP engines don’t support invalid board positions.')
         } else if (board.width > alpha.length) {
-            throw new Error(`GTP引擎仅支持棋盘尺寸不超过 ${alpha.length}.`)
+            throw new Error(`GTP 引擎仅支持棋盘尺寸不超过 ${alpha.length}.`)
         }
 
         // Update komi
 
-        let komi = +gametree.getRootProperty(rootTree, 'KM', 0)
+        let komi = +gametree.getRootProperty(tree, 'KM', 0)
 
         if (komi !== this.state.komi) {
-            controller.sendCommand({name: 'komi', args: [komi]})
+            let {error} = await controller.sendCommand({name: 'komi', args: [komi]})
+            if (error) throw new Error('Komi is not supported by engine.')
         }
 
         // Update board size
 
         if (this.state.dirty || board.width !== this.state.size) {
-            controller.sendCommand({name: 'boardsize', args: [board.width]})
+            let {error} = await controller.sendCommand({name: 'boardsize', args: [board.width]})
+            if (error) throw new Error('Board size is not supported by engine.')
+
             this.state.dirty = true
         }
 
@@ -158,10 +186,14 @@ class EngineSyncer extends EventEmitter {
         async function enginePlay(sign, vertex) {
             let color = sign > 0 ? 'B' : 'W'
             let coord = board.vertex2coord(vertex)
-            if (coord == null) return true
+            if (coord == null) coord = 'pass'
 
-            let response = await controller.sendCommand({name: 'play', args: [color, coord]})
-            if (response.error) return false
+            try {
+                let {error} = await controller.sendCommand({name: 'play', args: [color, coord]})
+                if (error) return false
+            } catch (err) {
+                return false
+            }
 
             return true
         }
@@ -170,25 +202,24 @@ class EngineSyncer extends EventEmitter {
         let moves = []
         let promises = []
         let synced = true
+        let nodes = [...tree.listNodesVertically(id, -1, {})].reverse()
 
-        for (let tp = [rootTree, 0]; true; tp = gametree.navigate(...tp, 1)) {
-            let node = tp[0].nodes[tp[1]]
-            let nodeBoard = gametree.getBoard(...tp)
+        for (let node of nodes) {
+            let nodeBoard = gametree.getBoard(tree, node.id)
             let placedHandicapStones = false
 
             if (
-                node.AB
-                && node.AB.length >= 2
+                node.data.AB
+                && node.data.AB.length >= 2
                 && engineBoard.isEmpty()
                 && this.commands.includes('set_free_handicap')
             ) {
                 // Place handicap stones
 
-                let vertices = [].concat(...node.AB.map(sgf.parseCompressedVertices))
+                let vertices = [].concat(...node.data.AB.map(sgf.parseCompressedVertices)).sort()
                 let coords = vertices
                     .map(v => board.vertex2coord(v))
                     .filter(x => x != null)
-                    .sort()
                     .filter((x, i, arr) => i === 0 || x !== arr[i - 1])
 
                 if (coords.length > 0) {
@@ -210,13 +241,14 @@ class EngineSyncer extends EventEmitter {
             }
 
             for (let prop of ['B', 'W', 'AB', 'AW']) {
-                if (!(prop in node) || placedHandicapStones && prop === 'AB') continue
+                if (node.data[prop] == null || placedHandicapStones && prop === 'AB') continue
 
                 let sign = prop.slice(-1) === 'B' ? 1 : -1
-                let vertices = [].concat(...node[prop].map(sgf.parseCompressedVertices))
+                let vertices = [].concat(...node.data[prop].map(sgf.parseCompressedVertices))
 
                 for (let vertex of vertices) {
-                    if (engineBoard.get(vertex) !== 0) continue
+                    if (engineBoard.hasVertex(vertex) && engineBoard.get(vertex) !== 0) continue
+                    else if (!engineBoard.hasVertex(vertex)) vertex = [-1, -1]
 
                     moves.push({sign, vertex})
                     promises.push(() => enginePlay(sign, vertex))
@@ -229,7 +261,7 @@ class EngineSyncer extends EventEmitter {
                 break
             }
 
-            if (helper.vertexEquals(tp, treePosition)) break
+            if (node.id === id) break
         }
 
         if (synced) {
@@ -255,7 +287,7 @@ class EngineSyncer extends EventEmitter {
             } else {
                 // Replay from beginning
 
-                controller.sendCommand({name: 'clear_board'})
+                promises.unshift(() => controller.sendCommand({name: 'clear_board'}))
             }
 
             let result = await Promise.all(promises.map(x => x()))
@@ -291,9 +323,8 @@ class EngineSyncer extends EventEmitter {
 
         // Complete rearrangement
 
-        promises = []
+        promises = [() => controller.sendCommand({name: 'clear_board'})]
         engineBoard = new Board(board.width, board.height)
-        controller.sendCommand({name: 'clear_board'})
 
         for (let x = 0; x < board.width; x++) {
             for (let y = 0; y < board.height; y++) {
@@ -312,7 +343,7 @@ class EngineSyncer extends EventEmitter {
             if (success) return
         }
 
-        throw new Error('GTP引擎无法在当前棋盘重新创建布局。')
+        throw new Error('GTP 引擎无法在当前棋盘重新创建布局。')
     }
 }
 

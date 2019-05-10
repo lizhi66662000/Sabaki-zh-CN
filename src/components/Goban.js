@@ -1,5 +1,6 @@
 const {h, Component} = require('preact')
 const classNames = require('classnames')
+const sgf = require('@sabaki/sgf')
 const {BoundedGoban} = require('@sabaki/shudan')
 const {remote} = require('electron')
 
@@ -9,21 +10,24 @@ const setting = remote.require('./setting')
 
 class Goban extends Component {
     constructor(props) {
-        super()
+        super(props)
 
         this.handleVertexMouseUp = this.handleVertexMouseUp.bind(this)
         this.handleVertexMouseDown = this.handleVertexMouseDown.bind(this)
         this.handleVertexMouseMove = this.handleVertexMouseMove.bind(this)
         this.handleVertexMouseEnter = this.handleVertexMouseEnter.bind(this)
         this.handleVertexMouseLeave = this.handleVertexMouseLeave.bind(this)
+
+        this.componentWillReceiveProps()
     }
 
     componentDidMount() {
         document.addEventListener('mouseup', () => {
             this.mouseDown = false
 
-            if (this.state.temporaryLine)
+            if (this.state.temporaryLine) {
                 this.setState({temporaryLine: null})
+            }
         })
 
         // Resize board when window is resizing
@@ -36,7 +40,7 @@ class Goban extends Component {
         this.componentDidUpdate()
     }
 
-    componentDidUpdate(prevProps) {
+    componentDidUpdate() {
         if (!this.element || !this.element.parentElement) return
 
         let {offsetWidth: maxWidth, offsetHeight: maxHeight} = this.element.parentElement
@@ -55,10 +59,12 @@ class Goban extends Component {
                 this.setState({left, top})
             }
         }, 0)
+    }
 
-        if (prevProps == null || prevProps.playVariation !== this.props.playVariation) {
-            if (this.props.playVariation != null) {
-                let {sign, variation, sibling} = this.props.playVariation
+    componentWillReceiveProps(nextProps = {}) {
+        if (nextProps.playVariation !== this.props.playVariation) {
+            if (nextProps.playVariation != null) {
+                let {sign, variation, sibling} = nextProps.playVariation
 
                 this.stopPlayingVariation()
                 this.playVariation(sign, variation, sibling)
@@ -164,6 +170,7 @@ class Goban extends Component {
     }
 
     render({
+        gameTree,
         treePosition,
         board,
         paintMap,
@@ -174,6 +181,7 @@ class Goban extends Component {
         crosshair = false,
         showCoordinates = false,
         showMoveColorization = true,
+        showMoveNumbers = false,
         showNextMoves = true,
         showSiblings = true,
         fuzzyStonePlacement = true,
@@ -193,6 +201,9 @@ class Goban extends Component {
         variationSibling = false,
         variationIndex = -1
     }) {
+        let signMap = board.arrangement
+        let markerMap = board.markers
+
         // Calculate lines
 
         let drawTemporaryLine = !!drawLineMode && !!temporaryLine
@@ -244,20 +255,40 @@ class Goban extends Component {
             }
         }
 
+        // Draw move numbers
+
+        if (showMoveNumbers) {
+            markerMap = markerMap.map(row => row.map(_ => null))
+
+            let history = [...gameTree.listNodesVertically(treePosition, -1, {})].reverse()
+
+            for (let i = 0; i < history.length; i++) {
+                let node = history[i]
+                let vertex = [-1, -1]
+
+                if (node.data.B != null) vertex = sgf.parseVertex(node.data.B[0])
+                else if (node.data.W != null) vertex = sgf.parseVertex(node.data.W[0])
+
+                let [x, y] = vertex
+
+                if (markerMap[y] != null && x < markerMap[y].length) {
+                    markerMap[y][x] = {type: 'label', label: i.toString()}
+                }
+            }
+        }
+
         // Draw variation
 
-        let signMap = board.arrangement
-        let markerMap = board.markers
         let drawHeatMap = true
 
         if (variation != null) {
             markerMap = board.markers.map(x => [...x])
 
             if (variationSibling) {
-                let prevPosition = gametree.navigate(...treePosition, -1)
+                let prevPosition = gameTree.navigate(treePosition, -1, {})
 
                 if (prevPosition != null) {
-                    board = gametree.getBoard(...prevPosition)
+                    board = gametree.getBoard(gameTree, prevPosition.id)
                     signMap = board.arrangement
                 }
             }

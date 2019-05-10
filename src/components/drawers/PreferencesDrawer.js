@@ -5,9 +5,11 @@ const classNames = require('classnames')
 
 const Drawer = require('./Drawer')
 
+const t = require('../../i18n').context('PreferencesDrawer')
 const dialog = require('../../modules/dialog')
 const helper = require('../../modules/helper')
 const setting = remote.require('./setting')
+const gtplogger = require('../../modules/gtplogger')
 
 class PreferencesItem extends Component {
     constructor(props) {
@@ -25,9 +27,9 @@ class PreferencesItem extends Component {
             onChange(Object.assign({checked}, this.props))
         }
 
-        setting.events.on('change', ({key}) => {
+        setting.events.on('change', ({key, value}) => {
             if (key === this.props.id) {
-                this.setState({checked: setting.get(key)})
+                this.setState({checked: value})
             }
         })
     }
@@ -37,7 +39,7 @@ class PreferencesItem extends Component {
     }
 
     render({text}, {checked}) {
-        return h('li', {},
+        return h('li', {class: 'preferences-item'},
             h('label', {},
                 h('input', {
                     type: 'checkbox',
@@ -73,96 +75,100 @@ class GeneralTab extends Component {
             h('ul', {},
                 h(PreferencesItem, {
                     id: 'app.enable_hardware_acceleration',
-                    text: '如果可能的话启用硬件加速'
+                    text: t('如果可能的话启用硬件加速')
                 }),
                 h(PreferencesItem, {
                     id: 'app.startup_check_updates',
-                    text: '启动时检查更新'
+                    text: t('启动时检查更新')
                 }),
                 h(PreferencesItem, {
                     id: 'sound.enable',
-                    text: '启用声音',
+                    text: t('启用声音'),
                     onChange: this.handleSoundEnabledChange
                 }),
                 h(PreferencesItem, {
                     id: 'game.goto_end_after_loading',
-                    text: '加载棋谱文件后跳转到最后一步'
+                    text: t('加载棋谱文件后跳转到最后一步')
                 }),
                 h(PreferencesItem, {
                     id: 'view.fuzzy_stone_placement',
-                    text: '模糊(仿真对局)棋子摆放'
+                    text: t('模糊(不对齐)棋子摆放')
                 }),
                 h(PreferencesItem, {
                     id: 'view.animated_stone_placement',
-                    text: '动态模糊(仿真对局)摆放'
+                    text: t('动态模糊棋子摆放')
                 }),
                 h(PreferencesItem, {
                     id: 'board.variation_instant_replay',
-                    text: '在棋盘上即时显示分析变化'
+                    text: t('在棋盘上即时显示分析变化')
                 }),
                 h(PreferencesItem, {
                     id: 'gtp.start_game_after_attach',
-                    text: '附加引擎后立即开始对局'
+                    text: t('附加引擎后立即开始对局')
                 }),
                 h(PreferencesItem, {
                     id: 'gtp.auto_genmove',
-                    text: '引擎自动生成走法（下子）'
+                    text: t('引擎自动生成走法')
                 })
             ),
 
             h('ul', {},
                 h(PreferencesItem, {
                     id: 'comments.show_move_interpretation',
-                    text: '自动在注释标题栏显示行棋术语'
+                    text: t('自动在注释标题栏显示行棋术语')
                 }),
                 h(PreferencesItem, {
                     id: 'game.show_ko_warning',
-                    text: '显示KO警告'
+                    text: t('显示 KO 警告')
                 }),
                 h(PreferencesItem, {
                     id: 'game.show_suicide_warning',
-                    text: '显示自杀警告'
+                    text: t('显示自杀警告')
                 }),
                 h(PreferencesItem, {
                     id: 'edit.show_removenode_warning',
-                    text: '显示删除节点警告'
+                    text: t('显示删除节点警告')
                 }),
                 h(PreferencesItem, {
                     id: 'edit.show_removeothervariations_warning',
-                    text: '显示删除其它变化警告'
+                    text: t('显示删除其它变化警告')
                 }),
                 h(PreferencesItem, {
                     id: 'file.show_reload_warning',
-                    text: '如果外部更改则给予重新加载文件'
+                    text: t('如果外部更改则给予重新加载文件')
                 }),
                 h(PreferencesItem, {
                     id: 'edit.click_currentvertex_to_remove',
-                    text: '点击最后下的棋子删除'
+                    text: t('点击最后下的棋子删除')
                 }),
                 h(PreferencesItem, {
                     id: 'app.always_show_result',
-                    text: '始终显示棋局结果'
-                })
+                    text: t('始终显示棋局结果')
+                }),
+                h(PreferencesItem, {
+                    id: 'view.winrategraph_invert',
+                    text: t('倒置胜率图')
+                }),
             ),
 
             h('p', {}, h('label', {},
-                '棋局树样式: ',
+                t('棋局树样式:'), ' ',
 
                 h('select', {onChange: this.handleTreeStyleChange},
                     h('option', {
                         value: 'compact',
                         selected: graphGridSize < 22
-                    }, '紧凑'),
+                    }, t('紧凑')),
 
                     h('option', {
                         value: 'spacious',
                         selected: graphGridSize === 22
-                    }, '宽敞'),
+                    }, t('宽敞')),
 
                     h('option', {
                         value: 'big',
                         selected: graphGridSize > 22
-                    }, '大')
+                    }, t('大'))
                 )
             ))
         )
@@ -184,8 +190,12 @@ class PathInputItem extends Component {
         }
 
         this.handleBrowseButtonClick = evt => {
+            let dialogProperties = this.props.chooseDirectory != null
+                ? ['openDirectory', 'createDirectory']
+                : ['openFile']
+
             dialog.showOpenDialog({
-                properties: ['openFile'],
+                properties: dialogProperties,
             }, ({result}) => {
                 if (!result || result.length === 0) return
 
@@ -193,9 +203,9 @@ class PathInputItem extends Component {
             })
         }
 
-        setting.events.on('change', ({key}) => {
+        setting.events.on('change', ({key, value}) => {
             if (key === this.props.id) {
-                this.setState({value: setting.get(key)})
+                this.setState({value: value})
             }
         })
     }
@@ -206,12 +216,12 @@ class PathInputItem extends Component {
     }
 
     render({text}, {value}) {
-        return h('li', {}, h('label', {},
-            h('span', {}, text),
+        return h('li', {class: 'path-input-item'}, h('label', {},
+            text != null && h('span', {}, text),
 
             h('input', {
                 type: 'search',
-                placeholder: '路径',
+                placeholder: t('路径'),
                 value,
                 onChange: this.handlePathChange
             }),
@@ -223,15 +233,21 @@ class PathInputItem extends Component {
                 },
                 h('img', {
                     src: './node_modules/octicons/build/svg/file-directory.svg',
-                    title: '浏览…',
+                    title: t('浏览…'),
                     height: 14
                 })
             ),
 
-            value && !fs.existsSync(value) && h('a', {class: 'invalid'},
+            value && !(
+                this.props.chooseDirectory
+                ? helper.isWritableDirectory(value)
+                : fs.existsSync(value)
+            ) && h('a', {class: 'invalid'},
                 h('img', {
                     src: './node_modules/octicons/build/svg/alert.svg',
-                    title: '文件未找到',
+                    title: this.props.chooseDirectory
+                        ? t('目录未找到')
+                        : t('文件未找到'),
                     height: 14
                 })
             )
@@ -263,8 +279,8 @@ class ThemesTab extends Component {
             evt.preventDefault()
 
             let result = dialog.showMessageBox(
-                '你真的要卸载这个主题？',
-                'warning', ['卸载', '取消'], 1
+                t('你真的要卸载这个主题？'),
+                'warning', [t('卸载'), t('取消')], 1
             )
 
             if (result === 1) return
@@ -273,7 +289,7 @@ class ThemesTab extends Component {
             let {path} = setting.getThemes()[this.state.currentTheme]
 
             rimraf(path, err => {
-                if (err) return dialog.showMessageBox('卸载失败', 'error')
+                if (err) return dialog.showMessageBox(t('卸载失败。'), 'error')
 
                 setting.loadThemes()
                 setting.set('theme.current', null)
@@ -285,7 +301,7 @@ class ThemesTab extends Component {
 
             dialog.showOpenDialog({
                 properties: ['openFile'],
-                filters: [{name: 'Sabaki Themes', extensions: ['asar']}]
+                filters: [{name: t('Sabaki Themes'), extensions: ['asar']}]
             }, ({result}) => {
                 if (!result || result.length === 0) return
 
@@ -295,7 +311,7 @@ class ThemesTab extends Component {
                 let id = uuid()
 
                 copy(result[0], join(setting.themesDirectory, id), err => {
-                    if (err) return dialog.showMessageBox('安装失败', 'error')
+                    if (err) return dialog.showMessageBox(t('安装失败。'), 'error')
 
                     setting.loadThemes()
                     setting.set('theme.current', id)
@@ -303,9 +319,9 @@ class ThemesTab extends Component {
             })
         }
 
-        setting.events.on('change', ({key}) => {
+        setting.events.on('change', ({key, value}) => {
             if (key === 'theme.current') {
-                this.setState({currentTheme: setting.get(key)})
+                this.setState({currentTheme: value})
             }
         })
     }
@@ -314,24 +330,24 @@ class ThemesTab extends Component {
         let currentTheme = setting.getThemes()[this.state.currentTheme]
 
         return h('div', {class: 'themes'},
-            h('h3', {}, '自定义图像'),
+            h('h3', {}, t('自定义图像')),
 
             h('ul', {class: 'userpaths'},
                 h(PathInputItem, {
                     id: 'theme.custom_blackstones',
-                    text: '黑子图像:'
+                    text: t('黑子图像：')
                 }),
                 h(PathInputItem, {
                     id: 'theme.custom_whitestones',
-                    text: '白子图像:'
+                    text: t('白子图像：')
                 }),
                 h(PathInputItem, {
                     id: 'theme.custom_board',
-                    text: '棋盘图像:'
+                    text: t('棋盘图像：')
                 }),
                 h(PathInputItem, {
                     id: 'theme.custom_background',
-                    text: '背景图像:'
+                    text: t('背景图像：')
                 })
             ),
 
@@ -341,7 +357,7 @@ class ThemesTab extends Component {
                 h('select',
                     {onChange: this.handleThemeChange},
 
-                    h('option', {value: '', selected: currentTheme == null}, '默认'),
+                    h('option', {value: '', selected: currentTheme == null}, t('默认')),
 
                     Object.keys(setting.getThemes()).map(id => h('option',
                         {
@@ -353,28 +369,36 @@ class ThemesTab extends Component {
                     ))
                 ), ' ',
 
-                currentTheme && h('button', {type: 'button', onClick: this.handleUninstallButton}, '卸载'),
+                currentTheme && h('button', {
+                    type: 'button',
+                    onClick: this.handleUninstallButton
+                }, t('卸载')),
 
                 h('div', {class: 'install'},
-                    h('button', {type: 'button', onClick: this.handleInstallButton}, '安装主题…'),
+                    h('button', {
+                        type: 'button',
+                        onClick: this.handleInstallButton
+                    }, t('安装主题…')),
                     ' ',
                     h('a', {
                         href: `https://github.com/SabakiHQ/Sabaki/blob/v${sabaki.version}/docs/guides/theme-directory.md`,
                         onClick: this.handleLinkClick
-                    }, '获取更多主题…')
+                    }, t('获取更多主题…'))
                 )
             ),
 
             currentTheme && [
                 h('p', {class: 'meta'},
-                    currentTheme.author && 'by ' + currentTheme.author,
+                    currentTheme.author && t(p => `by ${p.author}`, {
+                        author: currentTheme.author
+                    }),
                     currentTheme.author && currentTheme.homepage && ' — ',
                     currentTheme.homepage && h('a', {
                         class: 'homepage',
                         href: currentTheme.homepage,
                         title: currentTheme.homepage,
                         onClick: this.handleLinkClick
-                    }, '主页')
+                    }, t('主页'))
                 ),
 
                 h('p', {class: 'description'},
@@ -406,7 +430,7 @@ class EngineItem extends Component {
         this.handleBrowseButtonClick = () => {
             dialog.showOpenDialog({
                 properties: ['openFile'],
-                filters: [{name: '所有文件', extensions: ['*']}]
+                filters: [{name: t('所有文件'), extensions: ['*']}]
             }, ({result}) => {
                 if (!result || result.length === 0) return
 
@@ -434,7 +458,7 @@ class EngineItem extends Component {
                 h('a',
                     {
                         class: 'remove',
-                        title: '删除',
+                        title: t('删除'),
                         onClick: this.handleRemoveButtonClick
                     },
 
@@ -442,7 +466,7 @@ class EngineItem extends Component {
                 ),
                 h('input', {
                     type: 'text',
-                    placeholder: '(未命名的引擎)',
+                    placeholder: t('(未命名的引擎)'),
                     value: name,
                     name: 'name',
                     onChange: this.handleChange
@@ -452,7 +476,7 @@ class EngineItem extends Component {
                 h('a',
                     {
                         class: 'browse',
-                        title: '浏览…',
+                        title: t('浏览…'),
                         onClick: this.handleBrowseButtonClick
                     },
 
@@ -460,7 +484,7 @@ class EngineItem extends Component {
                 ),
                 h('input', {
                     type: 'text',
-                    placeholder: '路径',
+                    placeholder: t('路径'),
                     value: path,
                     name: 'path',
                     onChange: this.handleChange
@@ -469,7 +493,7 @@ class EngineItem extends Component {
             h('p', {},
                 h('input', {
                     type: 'text',
-                    placeholder: '没有参数',
+                    placeholder: t('没有参数'),
                     value: args,
                     name: 'args',
                     onChange: this.handleChange
@@ -478,7 +502,7 @@ class EngineItem extends Component {
             h('p', {},
                 h('input', {
                     type: 'text',
-                    placeholder: '初始化命令(;-英文半角分号分隔)',
+                    placeholder: t('初始化命令(;-英文半角分号分隔)'),
                     value: commands,
                     name: 'commands',
                     onChange: this.handleChange
@@ -522,6 +546,19 @@ class EnginesTab extends Component {
 
     render({engines}) {
         return h('div', {ref: el => this.element = el, class: 'engines'},
+            h('div', {class: 'gtp-console-log'},
+                h('ul', {},
+                    h(PreferencesItem, {
+                        id: 'gtp.console_log_enabled',
+                        text: t('启用 GTP 日志记录到目录：')
+                    }),
+
+                    h(PathInputItem, {
+                        id: 'gtp.console_log_path',
+                        chooseDirectory: true
+                    })
+                )
+            ),
             h('div', {class: 'engines-list'},
                 h('ul', {}, engines.map(({name, path, args, commands}, id) =>
                     h(EngineItem, {
@@ -538,7 +575,7 @@ class EnginesTab extends Component {
             ),
 
             h('p', {},
-                h('button', {type: 'button', onClick: this.handleAddButtonClick}, '添加')
+                h('button', {type: 'button', onClick: this.handleAddButtonClick}, t('添加'))
             )
         )
     }
@@ -572,11 +609,26 @@ class PreferencesDrawer extends Component {
             let natsort = require('natsort')
             let cmp = natsort({insensitive: true})
 
-            // Sort engines.
+            // Sort engines
 
             let engines = [...this.props.engines].sort((x, y) => cmp(x.name, y.name))
 
             setting.set('engines.list', engines)
+
+            // Don't create an empty log file
+
+            if (sabaki.attachedEngineSyncers.some(x => x != null)) {
+                if (!gtplogger.updatePath()) {
+                    // Force the user to fix the issue
+
+                    setTimeout(() => {
+                        sabaki.setState({preferencesTab: 'engines'})
+                        sabaki.openDrawer('preferences')
+                    }, 500)
+
+                    return
+                }
+            }
 
             // Reset tab selection
 
@@ -597,7 +649,7 @@ class PreferencesDrawer extends Component {
                         onClick: this.handleTabClick
                     },
 
-                    h('a', {href: '#'}, '常 规')
+                    h('a', {href: '#'}, t('常 规'))
                 ),
                 h('li',
                     {
@@ -605,7 +657,7 @@ class PreferencesDrawer extends Component {
                         onClick: this.handleTabClick
                     },
 
-                    h('a', {href: '#'}, '主 题')
+                    h('a', {href: '#'}, t('主 题'))
                 ),
                 h('li',
                     {
@@ -613,17 +665,17 @@ class PreferencesDrawer extends Component {
                         onClick: this.handleTabClick
                     },
 
-                    h('a', {href: '#'}, '引 擎')
+                    h('a', {href: '#'}, t('引 擎'))
                 )
             ),
 
-            h('form', {class: tab},
+            h('form', {class: classNames(tab, 'tab-content')},
                 h(GeneralTab, {graphGridSize}),
                 h(ThemesTab),
                 h(EnginesTab, {engines}),
 
                 h('p', {},
-                    h('button', {type: 'button', onClick: this.handleCloseButtonClick}, '关闭')
+                    h('button', {type: 'button', onClick: this.handleCloseButtonClick}, t('关闭'))
                 )
             )
         )

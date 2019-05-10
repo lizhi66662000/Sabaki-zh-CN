@@ -1,94 +1,129 @@
-const {remote} = require('electron')
+const {remote, shell} = require('electron')
 const {h, Component} = require('preact')
 const classNames = require('classnames')
+const boardmatcher = require('@sabaki/boardmatcher')
 const sgf = require('@sabaki/sgf')
 
 const MarkdownContentDisplay = require('./MarkdownContentDisplay')
 
-const boardmatcher = require('../modules/boardmatcher')
+const t = require('../i18n').context('CommentBox')
 const gametree = require('../modules/gametree')
 const helper = require('../modules/helper')
 const setting = remote.require('./setting')
-const Board = require('../modules/board')
+
+let commentsCommitDelay = setting.get('comments.commit_delay')
 
 class CommentTitle extends Component {
     constructor() {
         super()
 
         this.handleEditButtonClick = () => sabaki.setMode('edit')
+
+        this.handleMoveNameHelpClick = evt => {
+            evt.preventDefault()
+            shell.openExternal(evt.currentTarget.href)
+        }
+
+        this.handleMoveNameHelpMouseEnter = evt => {
+            let matchedVertices = JSON.parse(evt.currentTarget.dataset.vertices)
+
+            sabaki.setState({highlightVertices: matchedVertices})
+        }
+
+        this.handleMoveNameHelpMouseLeave = evt => {
+            sabaki.setState({highlightVertices: []})
+        }
     }
 
-    shouldComponentUpdate({treePosition, moveAnnotation, positionAnnotation, title}) {
-        let [tree, index] = treePosition
-
+    shouldComponentUpdate({gameTree, treePosition, moveAnnotation, positionAnnotation, title}) {
         return title !== this.props.title
-            // First node
-            || !tree.parent && index === 0
-            // Last node
-            || tree.subtrees.length === 0 && index === tree.nodes.length - 1
-            // Other data changed
+            || gameTree !== this.props.gameTree
             || treePosition !== this.props.treePosition
             || !helper.vertexEquals(moveAnnotation, this.props.moveAnnotation)
             || !helper.vertexEquals(positionAnnotation, this.props.positionAnnotation)
     }
 
     getCurrentMoveInterpretation() {
-        let {treePosition: [tree, index], board} = this.props
-        let node = tree.nodes[index]
+        let {gameTree, treePosition} = this.props
+        let node = gameTree.get(treePosition)
 
         // Determine root node
 
-        if (!tree.parent && index === 0) {
+        if (node.parentId == null) {
             let result = []
 
-            if ('EV' in node) result.push(node.EV[0])
-            if ('GN' in node) result.push(node.GN[0])
+            if (node.data.EV != null) result.push(node.data.EV[0])
+            if (node.data.GN != null) result.push(node.data.GN[0])
 
             result = result.filter(x => x.trim() !== '').join(' — ')
-            if (result !== '')
-                return result
+            if (result !== '') return helper.typographer(result)
 
             let today = new Date()
             if (today.getDate() === 25 && today.getMonth() === 3)
-                return 'Happy Birthday, Sabaki!'
+                return t('生日快乐, Sabaki!')
+
+            return ''
         }
 
         // Determine end of main variation and show game result
 
-        if (tree.subtrees.length === 0
-        && index === tree.nodes.length - 1
-        && gametree.onMainTrack(tree)) {
-            let rootNode = gametree.getRoot(tree).nodes[0]
-
-            if ('RE' in rootNode && rootNode.RE[0].trim() !== '')
-                return '结果: ' + rootNode.RE[0]
-        }
-
-        // Determine capture
-
-        let prev = gametree.navigate(tree, index, -1)
-
-        if (prev) {
-            let prevBoard = gametree.getBoard(...prev)
-
-            if (!helper.vertexEquals(prevBoard.captures, board.captures))
-                return 'Take'
+        if (node.children.length === 0 && gameTree.onMainLine(treePosition)) {
+            let result = gametree.getRootProperty(gameTree, 'RE', '')
+            if (result.trim() !== '') return t(p => `Result: ${p.result}`, {result})
         }
 
         // Get current vertex
 
-        let vertex
+        let vertex, sign
 
-        if ('B' in node && node.B[0] !== '')
-            vertex = sgf.parseVertex(node.B[0])
-        else if ('W' in node && node.W[0] !== '')
-            vertex = sgf.parseVertex(node.W[0])
-        else if ('W' in node || 'B' in node)
-            return 'Pass'
-        else
-            return ''
+        if (node.data.B != null) {
+            sign = 1
+            vertex = sgf.parseVertex(node.data.B[0])
+        } else if (node.data.W != null) {
+            sign = -1
+            vertex = sgf.parseVertex(node.data.W[0])
+        } else {
+            return null
+        }
 
-        return boardmatcher.getMoveInterpretation(board, vertex) || ''
+        let prevBoard = gametree.getBoard(gameTree, node.parentId)
+        let patternMatch = boardmatcher.findPatternInMove(prevBoard.arrangement, sign, vertex)
+
+        if (patternMatch == null) {
+            let diff = vertex
+                .map((z, i) => Math.min(z + 1, [prevBoard.width, prevBoard.height][i] - z))
+                .sort((a, b) => a - b)
+
+            if (diff[0] > 6) return null
+
+            return t(p => `${p.a}-${p.b} Point`, {
+                a: diff[0],
+                b: diff[1]
+            })
+        }
+
+        let board = gametree.getBoard(gameTree, treePosition)
+        let matchedVertices = [...patternMatch.match.anchors, ...patternMatch.match.vertices]
+            .filter(v => board.get(v) !== 0)
+
+        return [
+            t(patternMatch.pattern.name), ' ',
+
+            patternMatch.pattern.url && h('a',
+                {
+                    class: 'help',
+                    href: patternMatch.pattern.url,
+                    title: t('查看 Sensei 网站文库的文章'),
+                    'data-vertices': JSON.stringify(matchedVertices),
+
+                    onClick: this.handleMoveNameHelpClick,
+                    onMouseEnter: this.handleMoveNameHelpMouseEnter,
+                    onMouseLeave: this.handleMoveNameHelpMouseLeave
+                },
+
+                h('img', {src: './node_modules/octicons/build/svg/question.svg', width: 16, height: 16})
+            )
+        ]
     }
 
     render({
@@ -97,28 +132,28 @@ class CommentTitle extends Component {
         title
     }) {
         let moveData = {
-            '-1': ['恶手', 'badmove'],
-            '0': ['疑问手', 'doubtfulmove'],
-            '1': ['趣向', 'interestingmove'],
-            '2': ['好棋', 'goodmove']
+            '-1': [t('恶手'), 'badmove'],
+            '0': [t('疑问手'), 'doubtfulmove'],
+            '1': [t('趣向'), 'interestingmove'],
+            '2': [t('好棋'), 'goodmove']
         }
 
         if (mv > 1) {
             for (let s in moveData) {
-                moveData[s][0] = 'Very ' + moveData[s][0].toLowerCase()
+                moveData[s][0] = t('Very ' + moveData[s][0].toLowerCase())
             }
         }
 
         let positionData = {
-            '-1': ['白好', 'white'],
-            '0': ['形势两分', 'balance'],
-            '1': ['黑好', 'black'],
-            '-2': ['形势不明', 'unclear']
+            '-1': [t('白好'), 'white'],
+            '0': [t('形势两分'), 'balance'],
+            '1': [t('黑好'), 'black'],
+            '-2': [t('形势不明'), 'unclear']
         }
 
         if (pv > 1) {
             for (let s in positionData) {
-                positionData[s][0] = 'Very ' + positionData[s][0].toLowerCase()
+                positionData[s][0] = t('Very ' + positionData[s][0].toLowerCase())
             }
         }
 
@@ -152,17 +187,17 @@ class CommentTitle extends Component {
             h('img', {
                 src: './node_modules/octicons/build/svg/pencil.svg',
                 class: 'edit-button',
-                title: '编辑',
+                title: t('编辑'),
                 width: 16,
                 height: 16,
                 onClick: this.handleEditButtonClick
             }),
 
-            h('span', {}, helper.typographer(
-                title !== '' ? title
+            h('span', {},
+                title !== '' ? helper.typographer(title)
                 : showMoveInterpretation ? this.getCurrentMoveInterpretation()
                 : ''
-            ))
+            )
         )
     }
 }
@@ -186,28 +221,35 @@ class CommentText extends Component {
 
 class CommentBox extends Component {
     constructor(props) {
-        super()
+        super(props)
 
         this.state = {
-            board: new Board()
+            title: '',
+            comment: ''
         }
 
         this.handleCommentInput = () => {
             let {onCommentInput = helper.noop} = this.props
 
-            onCommentInput({
+            this.setState({
                 title: this.titleInputElement.value,
                 comment: this.textareaElement.value
             })
+
+            clearTimeout(this.commentInputTimeout)
+            this.commentInputTimeout = setTimeout(() => {
+                onCommentInput({
+                    title: this.titleInputElement.value,
+                    comment: this.textareaElement.value
+                })
+            }, commentsCommitDelay)
         }
 
         this.handleMenuButtonClick = () => {
             let {left, bottom} = this.menuButtonElement.getBoundingClientRect()
+            let {gameTree, treePosition} = this.props
 
-            sabaki.openCommentMenu(...this.props.treePosition, {
-                x: Math.round(left),
-                y: Math.round(bottom)
-            })
+            sabaki.openCommentMenu(gameTree, treePosition, {x: left, y: bottom})
         }
     }
 
@@ -215,13 +257,14 @@ class CommentBox extends Component {
         return height !== this.props.height || showCommentBox && !this.dirty
     }
 
-    componentWillReceiveProps({treePosition, mode}) {
+    componentWillReceiveProps({treePosition, mode, title, comment}) {
         let treePositionChanged = treePosition !== this.props.treePosition
 
         if (mode === 'edit') {
             this.element.scrollTop = 0
             if (treePositionChanged) this.textareaElement.scrollTop = 0
 
+            this.setState({title, comment})
             return
         }
 
@@ -233,33 +276,26 @@ class CommentBox extends Component {
         this.updateId = setTimeout(() => {
             this.dirty = false
 
-            if (treePositionChanged) {
-                this.setState({
-                    board: gametree.getBoard(...this.props.treePosition)
-                })
-
-                this.element.scrollTop = 0
-            } else {
-                this.setState(this.state)
-            }
+            if (treePositionChanged) this.element.scrollTop = 0
+            this.setState({title, comment})
         }, setting.get('graph.delay'))
     }
 
     render({
+        gameTree,
         treePosition,
         height,
         sidebarSplitTransition,
         moveAnnotation,
         positionAnnotation,
-        title,
-        comment,
 
         onResizerMouseDown = helper.noop,
         onLinkClick = helper.noop,
         onCoordinateMouseEnter = helper.noop,
         onCoordinateMouseLeave = helper.noop
     }, {
-        board
+        title,
+        comment
     }) {
         return h('section',
             {
@@ -278,7 +314,7 @@ class CommentBox extends Component {
 
             h('div', {class: 'inner'},
                 h(CommentTitle, {
-                    board,
+                    gameTree,
                     treePosition,
                     moveAnnotation,
                     positionAnnotation,
@@ -309,7 +345,7 @@ class CommentBox extends Component {
                             type: 'text',
                             name: 'title',
                             value: title,
-                            placeholder: '标题',
+                            placeholder: t('标题'),
                             onInput: this.handleCommentInput
                         })
                     )
@@ -317,7 +353,7 @@ class CommentBox extends Component {
 
                 h('textarea', {
                     ref: el => this.textareaElement = el,
-                    placeholder: '注释',
+                    placeholder: t('注释'),
                     value: comment,
                     onInput: this.handleCommentInput
                 })

@@ -3,7 +3,7 @@ const {h, Component} = require('preact')
 
 const Drawer = require('./Drawer')
 
-const gametree = require('../../modules/gametree')
+const t = require('../../i18n').context('CleanMarkupDrawer')
 const helper = require('../../modules/helper')
 const setting = remote.require('./setting')
 
@@ -48,7 +48,6 @@ class CleanMarkupDrawer extends Component {
             evt.preventDefault()
 
             let doRemove = async work => {
-                sabaki.setUndoPoint('撤消清除标记')
                 sabaki.setBusy(true)
 
                 let data = {
@@ -72,36 +71,34 @@ class CleanMarkupDrawer extends Component {
 
                 await helper.wait(100)
 
-                work(properties)
+                let newTree = work(properties)
 
+                sabaki.setCurrentTreePosition(newTree, this.props.treePosition)
                 sabaki.setBusy(false)
                 sabaki.closeDrawer()
             }
 
             let template = [
                 {
-                    label: '&从当前位置',
+                    label: t('从当前位置'),
                     click: () => doRemove(properties => {
-                        let [tree, i] = this.props.treePosition
-
-                        for (let prop of properties) {
-                            delete tree.nodes[i][prop]
-                        }
+                        return this.props.gameTree.mutate(draft => {
+                            for (let prop of properties) {
+                                draft.removeProperty(this.props.treePosition, prop)
+                            }
+                        })
                     })
                 },
                 {
-                    label: '&从整个对局',
+                    label: t('从整个对局'),
                     click: () => doRemove(properties => {
-                        let root = gametree.getRoot(...this.props.treePosition)
-                        let trees = gametree.getTreesRecursive(root)
-
-                        for (let tree of trees) {
-                            for (let node of tree.nodes) {
+                        return this.props.gameTree.mutate(draft => {
+                            for (let node of this.props.gameTree.listNodes()) {
                                 for (let prop of properties) {
-                                    delete node[prop]
+                                    draft.removeProperty(node.id, prop)
                                 }
                             }
-                        }
+                        })
                     })
                 }
             ]
@@ -124,57 +121,57 @@ class CleanMarkupDrawer extends Component {
                 show
             },
 
-            h('h2', {}, '清理标记'),
+            h('h2', {}, t('清理标记')),
 
             h('form', {},
                 h('ul', {},
                     h(CleanMarkupItem, {
                         id: 'cleanmarkup.cross',
-                        text: '交叉标记'
+                        text: t('交叉标记')
                     }),
                     h(CleanMarkupItem, {
                         id: 'cleanmarkup.triangle',
-                        text: '三角标记'
+                        text: t('三角标记')
                     }),
                     h(CleanMarkupItem, {
                         id: 'cleanmarkup.square',
-                        text: '方形标记'
+                        text: t('方形标记')
                     }),
                     h(CleanMarkupItem, {
                         id: 'cleanmarkup.circle',
-                        text: '圆形标记'
+                        text: t('圆形标记')
                     })
                 ),
                 h('ul', {},
                     h(CleanMarkupItem, {
                         id: 'cleanmarkup.line',
-                        text: '线标记'
+                        text: t('线标记')
                     }),
                     h(CleanMarkupItem, {
                         id: 'cleanmarkup.arrow',
-                        text: '箭头标记'
+                        text: t('箭头标记')
                     }),
                     h(CleanMarkupItem, {
                         id: 'cleanmarkup.label',
-                        text: '标签标记'
+                        text: t('标签标记')
                     })
                 ),
                 h('ul', {},
                     h(CleanMarkupItem, {
                         id: 'cleanmarkup.comments',
-                        text: '评论'
+                        text: t('评论')
                     }),
                     h(CleanMarkupItem, {
                         id: 'cleanmarkup.annotations',
-                        text: '注释'
+                        text: t('注释')
                     }),
                     h(CleanMarkupItem, {
                         id: 'cleanmarkup.hotspots',
-                        text: '热点标记'
+                        text: t('热点标记')
                     }),
                     h(CleanMarkupItem, {
                         id: 'cleanmarkup.winrate',
-                        text: '胜率数据'
+                        text: t('胜率数据')
                     })
                 ),
 
@@ -183,9 +180,9 @@ class CleanMarkupDrawer extends Component {
                         type: 'button',
                         class: 'dropdown',
                         onClick: this.handleRemoveButtonClick
-                    }, '清除'), ' ',
+                    }, t('清除')), ' ',
 
-                    h('button', {onClick: this.handleCloseButtonClick}, '关闭')
+                    h('button', {onClick: this.handleCloseButtonClick}, t('关闭'))
                 )
             )
         )

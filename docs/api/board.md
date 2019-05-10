@@ -19,6 +19,8 @@ const {Board} = sabaki.modules
 
 An array consisting of the capture counts of the players. The value at index `0` represent the black player, while the value at index `1` represent the white player.
 
+### board.markers
+
 ### board.lines
 
 An array consisting of line and arrow information. Each line or arrow is represented by an array of length three
@@ -93,9 +95,12 @@ but is faster.
 
 * `vertex` [`<Vertex>`](vertex.md)
 
-### board.getScore(areaMap)
+### board.getScore(areaMap[, options])
 
 * `areaMap` - A precomputed area map or area estimate map using `board.getAreaMap()` or `board.getAreaEstimateMap()`
+* `options` `<Object>` *(optional)*
+    * `handicap` `<Integer>` - Default: `0`
+    * `komi` `<Number>` - Default: `0`
 
 Returns an object with the following keys:
 

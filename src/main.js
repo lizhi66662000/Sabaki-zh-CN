@@ -1,5 +1,6 @@
 const {app, shell, dialog, ipcMain, BrowserWindow, Menu} = require('electron')
 const {join} = require('path')
+const i18n = require('./i18n')
 const setting = require('./setting')
 const updater = require('./updater')
 
@@ -31,22 +32,25 @@ function newWindow(path) {
     windows.push(window)
     buildMenu()
 
-    window.webContents.setAudioMuted(!setting.get('sound.enable'))
-    window.webContents.on('did-finish-load', () => {
-        if (path) window.webContents.send('load-file', path)
-    }).on('new-window', evt => {
-        evt.preventDefault()
+    window.once('ready-to-show', () => {
+        window.show()
     })
 
     window.on('closed', () => {
         window = null
     })
 
-    window.loadURL(`file://${join(__dirname, '..', 'index.html')}`)
+    window.webContents.setAudioMuted(!setting.get('sound.enable'))
 
-    if (setting.get('debug.dev_tools')) {
-        window.openDevTools()
-    }
+    window.webContents.on('did-finish-load', () => {
+        if (path) window.webContents.send('load-file', path)
+    })
+
+    window.webContents.on('new-window', evt => {
+        evt.preventDefault()
+    })
+
+    window.loadURL(`file://${join(__dirname, '..', 'index.html')}`)
 
     return window
 }
@@ -57,7 +61,7 @@ function buildMenu(disableAll = false) {
     // Process menu items
 
     let processMenu = items => {
-        items.forEach(item => {
+        return items.map(item => {
             if ('click' in item) {
                 item.click = () => {
                     let window = BrowserWindow.getFocusedWindow()
@@ -90,61 +94,74 @@ function buildMenu(disableAll = false) {
             if ('submenu' in item) {
                 processMenu(item.submenu)
             }
+
+            return item
         })
     }
 
-    processMenu(template)
-
-    // Build
-
-    Menu.setApplicationMenu(Menu.buildFromTemplate(template))
+    Menu.setApplicationMenu(Menu.buildFromTemplate(processMenu(template)))
 
     // Create dock menu
 
-    if (process.platform === 'darwin') {
-        app.dock.setMenu(Menu.buildFromTemplate([{
-            label: '新窗口',
+    let dockMenu = Menu.buildFromTemplate([
+        {
+            label: i18n.t('menu.file', '新窗口(&W)'),
             click: () => newWindow()
-        }]))
+        }
+    ])
+
+    if (process.platform === 'darwin') {
+        app.dock.setMenu(dockMenu)
     }
 }
 
-function checkForUpdates(showFailDialogs) {
-    updater
-    .check(`SabakiHQ/${app.getName()}`)
-    .then(info => {
+async function checkForUpdates(showFailDialogs) {
+    try {
+        let t = i18n.context('updater')
+        let info = await updater.check(`SabakiHQ/${app.getName()}`)
+
         if (info.hasUpdates) {
             dialog.showMessageBox({
                 type: 'info',
-                buttons: ['下载更新', '现在不更新'],
+                buttons: [
+                    t('下载更新'),
+                    t('查看更新日志'),
+                    t('现在不更新')
+                ],
                 title: app.getName(),
-                message: `${app.getName()} v${info.latestVersion} is available now.`,
+                message: t(p => `${p.appName} v${p.version} is available now.`, {
+                    appName: app.getName(),
+                    version: info.latestVersion
+                }),
                 noLink: true,
-                cancelId: 1
+                cancelId: 2
             }, response => {
                 if (response === 0) {
                     shell.openExternal(info.downloadUrl || info.url)
+                } else if (response === 1) {
+                    shell.openExternal(info.url)
                 }
             })
         } else if (showFailDialogs) {
             dialog.showMessageBox({
                 type: 'info',
-                buttons: ['OK'],
-                title: '没有可用的更新',
-                message: `Sabaki v${app.getVersion()} 是最新版本。`
+                buttons: [t('OK')],
+                title: t('没有可用的更新'),
+                message: t(p => `Sabaki v${p.version} 是最新版本。`, {
+                    version: app.getVersion()
+                })
             }, () => {})
         }
-    })
-    .catch(err => {
+    } catch (err) {
         if (showFailDialogs) {
             dialog.showMessageBox({
                 type: 'warning',
-                buttons: ['OK'],
+                buttons: [t('OK')],
                 title: app.getName(),
-                message: '检查更新时出错。'
+                message: t('检查更新时出错。')
             })
         }
-    })
+    }
 }
 
 ipcMain.on('new-window', (evt, ...args) => newWindow(...args))
@@ -194,13 +211,20 @@ app.on('open-file', (evt, path) => {
 })
 
 process.on('uncaughtException', err => {
-    dialog.showErrorBox(`${app.getName()} v${app.getVersion()}`, [
-        'Something weird happened. ',
-        `${app.getName()} will shut itself down. `,
-        'If possible, please report this on ',
-        `${app.getName()}’s repository on GitHub.\n\n`,
-        err.stack
-    ].join(''))
+    let t = i18n.context('exception')
+
+    dialog.showErrorBox(
+        t(p => `${p.appName} v${p.version}`, {
+            appName: app.getName(),
+            version: app.getVersion()
+        }),
+        t(p => [
+            `Something weird happened. ${p.appName} will shut itself down.`,
+            `If possible, please report this on ${p.appName}’s repository on GitHub.`
+        ].join(' '), {
+            appName: app.getName()
+        }) + '\n\n' + err.stack
+    )
 
     process.exit(1)
 })

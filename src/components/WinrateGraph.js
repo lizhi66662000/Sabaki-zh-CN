@@ -1,29 +1,58 @@
 const {remote} = require('electron')
 const {h, Component} = require('preact')
 const helper = require('../modules/helper')
+const t = require('../i18n').context('WinrateGraph')
 const setting = remote.require('./setting')
 
-let winrateGraphHeight = setting.get('view.winrategraph_height')
+let winrateGraphMinHeight = setting.get('view.winrategraph_minheight')
 
 class WinrateGraph extends Component {
     constructor() {
         super()
 
+        this.state = {
+            height: setting.get('view.winrategraph_height'),
+            invert: setting.get('view.winrategraph_invert')
+        }
+
+        setting.events.on('change', ({key, value}) => {
+            if (key === 'view.winrategraph_invert') {
+                this.setState({invert: value})
+            }
+        })
+
         this.handleMouseDown = evt => {
             this.mouseDown = true
             document.dispatchEvent(new MouseEvent('mousemove', evt))
         }
+
+        this.handleHorizontalResizerWinrateMouseDown = ({button}) => {
+            if (button !== 0) return
+            this.horizontalResizerWinrateMouseDown = true
+        }
     }
 
-    shouldComponentUpdate({width, currentIndex, data}) {
+    shouldComponentUpdate({width, currentIndex, data}, {height, invert}) {
         return width !== this.props.width
             || currentIndex !== this.props.currentIndex
             || data[currentIndex] !== this.props.data[currentIndex]
+            || height !== this.state.height
+            || invert !== this.state.invert
     }
 
     componentDidMount() {
         document.addEventListener('mousemove', evt => {
             if (!this.mouseDown) return
+
+            if (this.horizontalResizerWinrateMouseDown) {
+                evt.preventDefault()
+
+                let height = Math.min(
+                    500, Math.max(winrateGraphMinHeight, evt.clientY)
+                )
+                this.setState({height})
+                return
+            }
 
             let rect = this.element.getBoundingClientRect()
             let percent = (evt.clientX - rect.left) / rect.width
@@ -34,21 +63,42 @@ class WinrateGraph extends Component {
         })
 
         document.addEventListener('mouseup', () => {
+            if (this.horizontalResizerWinrateMouseDown) {
+                this.horizontalResizerWinrateMouseDown = false
+                setting.set('view.winrategraph_height', this.state.height)
+                window.dispatchEvent(new Event('resize'))
+            }
             this.mouseDown = false
         })
+
     }
 
-    render({width, currentIndex, data}) {
+    render() {
+        let {width, currentIndex, data} = this.props
+        let {invert} = this.state
+
+        if (invert) {
+            data = data.map(x => x == null ? null : 100 - x)
+        }
+
         let dataDiff = data.map((x, i) => i === 0 || x == null || data[i - 1] == null ? null : x - data[i - 1])
         let dataDiffMax = Math.max(...dataDiff.map(Math.abs), 25)
 
         return h('section',
+
             {
                 ref: el => this.element = el,
                 id: 'winrategraph',
-                style: {height: winrateGraphHeight},
+                style: {
+                    height: this.state.height + 'px'
+                },
                 onMouseDown: this.handleMouseDown
             },
+
+            h('div', {
+                class: 'horizontalresizer',
+                onMouseDown: this.handleHorizontalResizerWinrateMouseDown
+            }),
 
             h('svg',
                 {
@@ -60,7 +110,7 @@ class WinrateGraph extends Component {
                 // Draw background
 
                 h('defs', {},
-                    h('linearGradient', {id: 'bgGradient', x1: 0, y1: 0, x2: 0, y2: 1},
+                    h('linearGradient', {id: 'bgGradient', x1: 0, y1: invert ? 1 : 0, x2: 0, y2: invert ? 0 : 1},
                         h('stop', {
                             offset: '0%',
                             'stop-color': 'white',
@@ -85,9 +135,9 @@ class WinrateGraph extends Component {
 
                                 if (instructions.length === 0) return ''
 
-                                return `M ${instructions[0][0]},100 `
+                                return `M ${instructions[0][0]},${invert ? 0 : 100} `
                                     + instructions.map(x => `L ${x.join(',')}`).join(' ')
-                                    + ` L ${instructions.slice(-1)[0][0]},100 Z`
+                                    + ` L ${instructions.slice(-1)[0][0]},${invert ? 0 : 100} Z`
                             })()
                         })
                     )
@@ -201,15 +251,14 @@ class WinrateGraph extends Component {
                     left: `${currentIndex * 100 / width}%`,
                     top: `${data[currentIndex]}%`
                 },
-                title: `White winrate: ${
-                    Math.round((100 - data[currentIndex]) * 100) / 100
-                }%${
-                    data[currentIndex - 1] == null ? '' : ` (${
-                        dataDiff[currentIndex] >= 0 ? '' : '+'
-                    }${
-                        -Math.round(dataDiff[currentIndex] * 100) / 100
-                    })`
-                }`
+                title: t(p => `White winrate: ${p.whiteWinrate}%${
+                    p.diff == null ? '' : ` (${p.diff >= 0 ? '+' : ''}${p.diff})`
+                }`, {
+                    whiteWinrate: Math.round((100 - data[currentIndex]) * 100) / 100,
+                    diff: dataDiff[currentIndex] == null
+                        ? null
+                        : -Math.round(dataDiff[currentIndex] * 100) / 100
+                })
             })
         )
     }

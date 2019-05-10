@@ -1,6 +1,7 @@
 const {remote, shell} = require('electron')
 const {h, Component} = require('preact')
 
+const t = require('../i18n').context('ContentDisplay')
 const gametree = require('../modules/gametree')
 const setting = remote.require('./setting')
 
@@ -31,7 +32,7 @@ function htmlify(input) {
             return `<a
                 href="#"
                 class="comment-movenumber"
-                title="Jump to Move Number"
+                title="${t('Jump to Move Number')}"
                 data-movenumber="${tokens[2]}"
             >${match}</a>`
     })
@@ -53,15 +54,14 @@ class ContentDisplay extends Component {
                 evt.preventDefault()
                 let moveNumber = +linkElement.dataset.movenumber
 
-                sabaki.setUndoPoint('Go Back')
                 sabaki.goToMainVariation()
                 sabaki.goToMoveNumber(moveNumber)
             }
         }
 
         let getVariationInfo = target => {
-            let {treePosition} = sabaki.state
-            let board = gametree.getBoard(...treePosition)
+            let {gameTrees, gameIndex, treePosition} = sabaki.state
+            let board = gametree.getBoard(gameTrees[gameIndex], treePosition)
             let currentVertex = board.currentVertex
             let currentVertexSign = currentVertex && board.get(currentVertex)
             let {color} = target.dataset
@@ -117,7 +117,8 @@ class ContentDisplay extends Component {
         }
 
         this.handleCoordMouseEnter = evt => {
-            let board = gametree.getBoard(...sabaki.state.treePosition)
+            let {gameTrees, gameIndex, treePosition} = sabaki.state
+            let board = gametree.getBoard(gameTrees[gameIndex], treePosition)
             let vertex = board.coord2vertex(evt.currentTarget.innerText)
 
             sabaki.setState({highlightVertices: [vertex]})
