@@ -4,6 +4,8 @@
 
 An elegant Go/Baduk/Weiqi board and SGF editor for a more civilized age. [Download the latest release](https://github.com/SabakiHQ/Sabaki/releases) of Sabaki.
 
+这是Sabaki的中文版。[下载最新版本](https://github.com/xsaxy/Sabaki-zh-CN/releases) of Sabaki-zh-CN.
+
 ![Screenshot](screenshot.png)
 
 ## Features
