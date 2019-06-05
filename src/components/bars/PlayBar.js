@@ -18,36 +18,36 @@ class PlayBar extends Component {
             let {left, top} = this.menuButtonElement.getBoundingClientRect()
             helper.popupMenu([
                 {
-                    label: t('通过一手'),
+                    label: t('&Pass'),
                     click: () => {
                         let autoGenmove = setting.get('gtp.auto_genmove')
                         sabaki.makeMove([-1, -1], {sendToEngine: autoGenmove})
                     }
                 },
                 {
-                    label: t('认输'),
+                    label: t('&Resign'),
                     click: () => sabaki.makeResign()
                 },
                 {type: 'separator'},
                 {
-                    label: t('估算-形势判断'),
+                    label: t('Es&timate'),
                     click: () => sabaki.setMode('estimator')
                 },
                 {
-                    label: t('比分-点目'),
+                    label: t('&Score'),
                     click: () => sabaki.setMode('scoring')
                 },
                 {
-                    label: t('编辑'),
+                    label: t('&Edit'),
                     click: () => sabaki.setMode('edit')
                 },
                 {
-                    label: t('查找'),
+                    label: t('&Find'),
                     click: () => sabaki.setMode('find')
                 },
                 {type: 'separator'},
                 {
-                    label: t('对局信息'),
+                    label: t('&Info'),
                     click: () => sabaki.openDrawer('info')
                 }
             ], left, top)
@@ -89,7 +89,9 @@ class PlayBar extends Component {
                 })
             },
 
-            h('span', {id: 'player_1'},
+            h('div', {class: 'hotspot', title: t('Hotspot')}),
+
+            h('span', {class: 'playercontent player_1'},
                 h('span', {class: 'captures', style: captureStyle(0)}, playerCaptures[0]), ' ',
 
                 playerRanks[0] && h('span',
@@ -106,17 +108,37 @@ class PlayBar extends Component {
                     },
                     isEngine[0] && playerBusy[0] && h(TextSpinner),
                     ' ',
-                    playerNames[0] || t('黑')
+                    playerNames[0] || t('Black')
                 )
             ),
 
-            h('span', {id: 'player_-1'},
+            h('a',
+                {
+                    class: 'current-player',
+                    title: t('Change Player'),
+                    onClick: onCurrentPlayerClick
+                },
+                h('img', {
+                    src: `./img/ui/player_${currentPlayer}.svg`,
+                    height: 21,
+                    alt: t(p =>
+                        `${
+                            p.player < 0 ? 'White'
+                            : p.player > 0 ? 'Black'
+                            : p.player
+                        } to play`,
+                        {player: currentPlayer}
+                    )
+                })
+            ),
+
+            h('span', {class: 'playercontent player_-1'},
                 h('span',
                     {
                         class: classNames('name', {engine: isEngine[1]}),
                         title: isEngine[1] && t('Engine')
                     },
-                    playerNames[1] || t('白'),
+                    playerNames[1] || t('White'),
                     ' ',
                     isEngine[1] && playerBusy[1] && h(TextSpinner)
                 ), ' ',
@@ -131,23 +153,13 @@ class PlayBar extends Component {
                 h('span', {class: 'captures', style: captureStyle(1)}, playerCaptures[1])
             ),
 
-            h('img', {
-                src: `./img/ui/player_${currentPlayer}.svg`,
-                class: 'current-player',
-                height: 22,
-                title: t('更改对局者'),
-                onClick: onCurrentPlayerClick
-            }),
-
-            h('div', {class: 'hotspot', title: t('热点')}),
-
             h('a',
                 {
                     ref: el => this.menuButtonElement = el,
-                    id: 'headermenu',
+                    class: 'menu',
                     onClick: this.handleMenuClick
                 },
-                h('img', {src: './node_modules/octicons/build/svg/three-bars.svg', height: 21})
+                h('img', {src: './node_modules/octicons/build/svg/three-bars.svg', height: 22})
             )
         )
     }

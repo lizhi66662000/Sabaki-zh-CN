@@ -25,6 +25,7 @@ function newWindow(path) {
         backgroundColor: '#111111',
         show: false,
         webPreferences: {
+            nodeIntegration: true,
             zoomFactor: setting.get('app.zoom_factor')
         }
     })
@@ -55,8 +56,8 @@ function newWindow(path) {
     return window
 }
 
-function buildMenu(disableAll = false) {
-    let template = require('./menu').clone()
+function buildMenu(props = {}) {
+    let template = require('./menu').get(props)
 
     // Process menu items
 
@@ -76,19 +77,10 @@ function buildMenu(disableAll = false) {
 
                 item.click = () => ({
                     newWindow,
-                    checkForUpdates: () => checkForUpdates(true)
+                    checkForUpdates: () => checkForUpdates({showFailDialogs: true})
                 })[key]()
 
                 delete item.clickMain
-            }
-
-            if ('checked' in item) {
-                item.type = 'checkbox'
-                item.checked = !!setting.get(item.checked)
-            }
-
-            if (disableAll && !item.enabled && !('submenu' in item || 'role' in item)) {
-                item.enabled = false
             }
 
             if ('submenu' in item) {
@@ -105,7 +97,7 @@ function buildMenu(disableAll = false) {
 
     let dockMenu = Menu.buildFromTemplate([
         {
-            label: i18n.t('menu.file', '新窗口(&W)'),
+            label: i18n.t('menu.file', 'New &Window'),
             click: () => newWindow()
         }
     ])
@@ -115,7 +107,7 @@ function buildMenu(disableAll = false) {
     }
 }
 
-async function checkForUpdates(showFailDialogs) {
+async function checkForUpdates({showFailDialogs = false} = {}) {
     try {
         let t = i18n.context('updater')
         let info = await updater.check(`SabakiHQ/${app.getName()}`)
@@ -124,9 +116,9 @@ async function checkForUpdates(showFailDialogs) {
             dialog.showMessageBox({
                 type: 'info',
                 buttons: [
-                    t('下载更新'),
-                    t('查看更新日志'),
-                    t('现在不更新')
+                    t('Download Update'),
+                    t('View Changelog'),
+                    t('Not Now')
                 ],
                 title: app.getName(),
                 message: t(p => `${p.appName} v${p.version} is available now.`, {
@@ -136,18 +128,20 @@ async function checkForUpdates(showFailDialogs) {
                 noLink: true,
                 cancelId: 2
             }, response => {
-                if (response === 0) {
-                    shell.openExternal(info.downloadUrl || info.url)
-                } else if (response === 1) {
-                    shell.openExternal(info.url)
-                }
+                if (response === 2) return
+
+                shell.openExternal(
+                    response === 0
+                    ? info.downloadUrl || info.url
+                    : info.url
+                )
             })
         } else if (showFailDialogs) {
             dialog.showMessageBox({
                 type: 'info',
                 buttons: [t('OK')],
-                title: t('没有可用的更新'),
-                message: t(p => `Sabaki v${p.version} 是最新版本。`, {
+                title: t('No updates available'),
+                message: t(p => `Sabaki v${p.version} is the latest version.`, {
                     version: app.getVersion()
                 })
             }, () => {})
@@ -158,7 +152,7 @@ async function checkForUpdates(showFailDialogs) {
                 type: 'warning',
                 buttons: [t('OK')],
                 title: app.getName(),
-                message: t('检查更新时出错。')
+                message: t('An error occurred while checking for updates.')
             })
         }
     }
@@ -172,17 +166,15 @@ app.on('window-all-closed', () => {
     if (process.platform !== 'darwin') {
         app.quit()
     } else {
-        buildMenu(true)
+        buildMenu({disableAll: true})
     }
 })
 
 app.on('ready', () => {
     isReady = true
 
-    let endsIn = (str, end) => str.slice(-end.length) === end
-
     if (!openfile && process.argv.length >= 2) {
-        if (!endsIn(process.argv[0], 'electron.exe') && !endsIn(process.argv[0], 'electron')) {
+        if (!process.argv[0].endsWith('electron.exe') && !process.argv[0].endsWith('electron')) {
             openfile = process.argv[1]
         } else if (process.argv.length >= 3) {
             openfile = process.argv[2]

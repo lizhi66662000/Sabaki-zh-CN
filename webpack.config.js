@@ -28,4 +28,3 @@ module.exports = (env, argv) => ({
         'iconv-lite': 'require("iconv-lite")'
     }
 })
-

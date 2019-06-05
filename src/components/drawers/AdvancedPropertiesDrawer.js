@@ -73,7 +73,7 @@ class PropertyItem extends Component {
                 !disabled && h('a',
                     {
                         class: 'remove',
-                        title: t('清除'),
+                        title: t('Remove'),
                         href: '#',
                         onClick: this.handleRemoveButtonClick
                     },
@@ -98,14 +98,14 @@ class AdvancedPropertiesDrawer extends Component {
             evt.preventDefault()
 
             let {value} = await new Promise(resolve =>
-                dialog.showInputBox(t('输入属性名称'), resolve, () => resolve({}))
+                dialog.showInputBox(t('Enter property name'), resolve, () => resolve({}))
             )
 
             if (value == null) return
             let property = value.toUpperCase()
 
             if (blockedProperties.includes(property)) {
-                dialog.showMessageBox(t('此属性已被阻止。'), 'warning')
+                dialog.showMessageBox(t('This property has been blocked.'), 'warning')
                 return
             }
 

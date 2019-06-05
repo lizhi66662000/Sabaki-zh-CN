@@ -62,15 +62,15 @@ class EditBar extends Component {
         return h(Bar, Object.assign({type: 'edit'}, this.props),
             h('ul', {},
                 [
-                    [t('棋子工具'), `stone_${stoneTool}`],
-                    [t('交叉工具'), 'cross'],
-                    [t('三角工具'), 'triangle'],
-                    [t('方形工具'), 'square'],
-                    [t('圆形工具'), 'circle'],
-                    [t('线工具'), 'line'],
-                    [t('箭头工具'), 'arrow'],
-                    [t('标签工具'), 'label'],
-                    [t('数字工具'), 'number']
+                    [t('Stone Tool'), `stone_${stoneTool}`],
+                    [t('Cross Tool'), 'cross'],
+                    [t('Triangle Tool'), 'triangle'],
+                    [t('Square Tool'), 'square'],
+                    [t('Circle Tool'), 'circle'],
+                    [t('Line Tool'), 'line'],
+                    [t('Arrow Tool'), 'arrow'],
+                    [t('Label Tool'), 'label'],
+                    [t('Number Tool'), 'number']
                 ].map(x =>
                     this.renderButton(...x, isSelected(x))
                 )
