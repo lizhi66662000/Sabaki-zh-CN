@@ -115,7 +115,7 @@ class PlayBar extends Component {
             h('a',
                 {
                     class: 'current-player',
-                    title: t('Change Player'),
+                    title: t('改变对局者'),
                     onClick: onCurrentPlayerClick
                 },
                 h('img', {

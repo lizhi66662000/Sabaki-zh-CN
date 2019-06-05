@@ -65,8 +65,8 @@ class ScoreDrawer extends Component {
         let score = board && board.getScore(areaMap, {handicap, komi})
         let result = score && (method === 'area' ? score.areaScore : score.territoryScore)
 
-        this.resultString = result > 0 ? t(p => `黑胜 B+${p.result}`, {result})
-            : result < 0 ? t(p => `白胜 W+${p.result}`, {result: -result})
+        this.resultString = result > 0 ? t(p => `黑 +  ${p.result}`, {result})
+            : result < 0 ? t(p => `白 + ${p.result}`, {result: -result})
             : t('和棋')
 
         return h(Drawer,
@@ -75,7 +75,7 @@ class ScoreDrawer extends Component {
                 show
             },
 
-            h('h2', {}, '比分'),
+            h('h2', {}, t('比分')),
 
             h('ul', {class: 'tabs'},
                 h('li', {class: classNames({current: method === 'area'})},
@@ -99,7 +99,7 @@ class ScoreDrawer extends Component {
                     h('th', {disabled: method === 'area'}, t('目数')),
                     h('th', {disabled: method === 'area'}, t('提子')),
                     h('th', {}, t('贴目')),
-                    h('th', {disabled: method === 'territory'}, t('贴子')),
+                    h('th', {disabled: method === 'territory'}, t('让子')),
                     h('th', {}, t('总计'))
                 )),
                 h('tbody', {},
@@ -110,7 +110,7 @@ class ScoreDrawer extends Component {
 
             h('form', {},
                 h('p', {},
-                    t('结果:'), ' ',
+                    t('结果：'), ' ',
                     h('span', {class: 'result'}, this.resultString), ' ',
 
                     !estimating && h('button', {

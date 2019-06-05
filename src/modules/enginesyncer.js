@@ -158,7 +158,7 @@ class EngineSyncer extends EventEmitter {
         if (!board.isSquare()) {
             throw new Error('GTP 引擎不支持非方形棋盘。')
         } else if (!board.isValid()) {
-            throw new Error('GTP engines don’t support invalid board positions.')
+            throw new Error('GTP 引擎不支持无效的棋盘位置。')
         } else if (board.width > alpha.length) {
             throw new Error(`GTP 引擎仅支持棋盘尺寸不超过 ${alpha.length}.`)
         }
@@ -169,14 +169,14 @@ class EngineSyncer extends EventEmitter {
 
         if (komi !== this.state.komi) {
             let {error} = await controller.sendCommand({name: 'komi', args: [komi]})
-            if (error) throw new Error('Komi is not supported by engine.')
+            if (error) throw new Error('引擎不支持贴目。')
         }
 
         // Update board size
 
         if (this.state.dirty || board.width !== this.state.size) {
             let {error} = await controller.sendCommand({name: 'boardsize', args: [board.width]})
-            if (error) throw new Error('Board size is not supported by engine.')
+            if (error) throw new Error('引擎不支持的棋盘尺寸。')
 
             this.state.dirty = true
         }

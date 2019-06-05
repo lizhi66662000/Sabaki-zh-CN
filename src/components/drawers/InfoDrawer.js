@@ -160,7 +160,7 @@ class InfoDrawer extends Component {
                 },
                 {type: 'separator'},
                 ...engines.map(engine => ({
-                    label: engine.name.trim() || t('(未命名引擎)'),
+                    label: engine.name.trim() || t('（未命名引擎）'),
                     type: 'checkbox',
                     checked: engine === this.state.engines[index],
                     click: () => {
@@ -254,11 +254,11 @@ class InfoDrawer extends Component {
             yearRange: 6,
             keyboardInput: false,
             i18n: {
-                previousMonth: t('Previous Month'),
-                nextMonth: t('Next Month'),
-                months: [t('January'), t('February'), t('March'), t('April'), t('May'), t('June'), t('July'), t('August'), t('September'), t('October'), t('November'), t('December')],
-                weekdays: [t('Sunday'), t('Monday'), t('Tuesday'), t('Wednesday'), t('Thursday'), t('Friday'), t('Saturday')],
-                weekdaysShort: [t('Sun'), t('Mon'), t('Tue'), t('Wed'), t('Thu'), t('Fri'), t('Sat')]
+                previousMonth: t('上个月'),
+                nextMonth: t('下个月'),
+                months: [t('一月'), t('二月'), t('三月'), t('四月'), t('五月'), t('六月'), t('七月'), t('八月'), t('九月'), t('十月'), t('十一月'), t('十二月')],
+                weekdays: [t('星期日'), t('星期一'), t('星期二'), t('星期三'), t('星期四'), t('星期五'), t('星期六')],
+                weekdaysShort: [t('周日'), t('周一'), t('周二'), t('周三'), t('周四'), t('周五'), t('周六')]
             },
 
             onOpen: () => {
@@ -439,10 +439,10 @@ class InfoDrawer extends Component {
                             onInput: this.handleDateInputChange
                         })
                     ),
-                    h(InfoDrawerItem, {title: t('贴目 ')},
+                    h(InfoDrawerItem, {title: t('注释 ')},
                         h('input', {
                             type: 'text',
-                            placeholder: t('None'),
+                            placeholder: t('无'),
                             value: gameComment,
                             onInput: this.handleInputChange.gameComment
                         })
@@ -458,9 +458,9 @@ class InfoDrawer extends Component {
                         : h('button', {
                             type: 'button',
                             onClick: this.handleShowResultClick
-                        }, t('Show'))
+                        }, t('显示'))
                     ),
-                    h(InfoDrawerItem, {title: t('让子')},
+                    h(InfoDrawerItem, {title: t('贴目 ')},
                         h('input', {
                             type: 'number',
                             name: 'komi',
@@ -470,7 +470,7 @@ class InfoDrawer extends Component {
                             onInput: this.handleInputChange.komi
                         })
                     ),
-                    h(InfoDrawerItem, {title: t('Handicap')},
+                    h(InfoDrawerItem, {title: t('让子 ')},
                         h('select',
                             {
                                 selectedIndex: Math.max(0, handicap - 1),

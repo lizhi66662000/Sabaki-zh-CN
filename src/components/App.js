@@ -588,7 +588,7 @@ class App extends Component {
                 properties: ['openFile'],
                 filters: [
                     ...fileformats.meta,
-                    {name: t('All Files'), extensions: ['*']}
+                    {name: t('所有文件'), extensions: ['*']}
                 ]
             }, ({result}) => {
                 if (result) filename = result[0]
@@ -716,7 +716,7 @@ class App extends Component {
             dialog.showSaveDialog({
                 filters: [
                     fileformats.sgf.meta,
-                    {name: t('All Files'), extensions: ['*']}
+                    {name: t('所有文件'), extensions: ['*']}
                 ]
             }, ({result}) => {
                 if (result) this.saveFile(result, false)
@@ -2033,7 +2033,7 @@ class App extends Component {
             },
             {type: 'separator'},
             {
-                label: t('使其成主变化'),
+                label: t('升为主变化'),
                 click: () => this.makeMainVariation(tree, treePosition)
             },
             {
@@ -2046,7 +2046,7 @@ class App extends Component {
             },
             {type: 'separator'},
             {
-                label: t('压平-成为根节点'),
+                label: t('变平－为根节点'),
                 click: () => this.flattenVariation(tree, treePosition)
             },
             {

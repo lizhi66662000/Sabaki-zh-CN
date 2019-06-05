@@ -6,7 +6,7 @@ const Board = require('../board')
 const gametree = require('../gametree')
 
 exports.meta = {
-    name: t('wBaduk NGF'),
+    name: t('新浪棋谱格式'),
     extensions: ['ngf']
 }
 
