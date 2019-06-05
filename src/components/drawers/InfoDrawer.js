@@ -32,7 +32,7 @@ class InfoDrawer extends Component {
             let emptyTree = this.props.gameTree.root.children.length === 0
             let keys = [
                 'blackName', 'blackRank', 'whiteName', 'whiteRank',
-                'gameName', 'eventName', 'date', 'result', 'komi'
+                'gameName', 'eventName', 'gameComment', 'date', 'result', 'komi'
             ]
 
             let data = keys.reduce((acc, key) => {
@@ -124,7 +124,7 @@ class InfoDrawer extends Component {
         this.handleInputChange = [
             'blackRank', 'blackName',
             'whiteRank', 'whiteName',
-            'gameName', 'eventName',
+            'gameName', 'eventName', 'gameComment',
             'komi', 'result', 'handicap'
         ].reduce((acc, key) => {
             acc[key] = ({currentTarget}) => {
@@ -329,6 +329,7 @@ class InfoDrawer extends Component {
         whiteRank = null,
         gameName = null,
         eventName = null,
+        gameComment = null,
         date = null,
         result = null,
         komi = null,
@@ -440,12 +441,10 @@ class InfoDrawer extends Component {
                     ),
                     h(InfoDrawerItem, {title: t('贴目 ')},
                         h('input', {
-                            type: 'number',
-                            name: 'komi',
-                            step: 0.5,
-                            placeholder: 0,
-                            value: komi == null ? '' : komi,
-                            onInput: this.handleInputChange.komi
+                            type: 'text',
+                            placeholder: t('None'),
+                            value: gameComment,
+                            onInput: this.handleInputChange.gameComment
                         })
                     ),
                     h(InfoDrawerItem, {title: t('结果 ')},
@@ -461,7 +460,17 @@ class InfoDrawer extends Component {
                             onClick: this.handleShowResultClick
                         }, t('Show'))
                     ),
-                    h(InfoDrawerItem, {title: t('让子 ')},
+                    h(InfoDrawerItem, {title: t('让子')},
+                        h('input', {
+                            type: 'number',
+                            name: 'komi',
+                            step: 0.5,
+                            placeholder: 0,
+                            value: komi == null ? '' : komi,
+                            onInput: this.handleInputChange.komi
+                        })
+                    ),
+                    h(InfoDrawerItem, {title: t('Handicap')},
                         h('select',
                             {
                                 selectedIndex: Math.max(0, handicap - 1),
@@ -471,7 +480,7 @@ class InfoDrawer extends Component {
 
                             h('option', {value: 0}, t('不让子')),
                             [...Array(8)].map((_, i) =>
-                                h('option', {value: i + 2}, t(p => `${p.stones} stones`, {
+                                h('option', {value: i + 2}, t(p => `${p.stones}  子`, {
                                     stones: i + 2
                                 }))
                             )

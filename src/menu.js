@@ -18,7 +18,12 @@ let treePosition = () => [sabaki.state.gameTrees[sabaki.state.gameIndex], sabaki
 
 let menu = null
 
-exports.buildMenu = function() {
+exports.build = function(props = {}) {
+    let {
+        disableAll = false,
+        disableGameNavigation = false
+    } = props
+
     let data = [
         {
             id: 'file',
@@ -27,18 +32,20 @@ exports.buildMenu = function() {
                 {
                     label: t('menu.file', '新建'),
                     accelerator: 'CmdOrCtrl+N',
+                    enabled: !disableGameNavigation,
                     click: () => sabaki.newFile({playSound: true, showInfo: true})
                 },
                 {
                     label: t('menu.file', '新窗口'),
                     accelerator: 'CmdOrCtrl+Shift+N',
                     clickMain: 'newWindow',
-                    enabled: true
+                    neverDisable: true
                 },
                 {type: 'separator'},
                 {
                     label: t('menu.file', '打开…'),
                     accelerator: 'CmdOrCtrl+O',
+                    enabled: !disableGameNavigation,
                     click: () => sabaki.loadFile()
                 },
                 {
@@ -57,6 +64,7 @@ exports.buildMenu = function() {
                     submenu: [
                         {
                             label: t('menu.file', '载入 SGF'),
+                            enabled: !disableGameNavigation,
                             click: () => sabaki.loadContent(clipboard.readText(), 'sgf')
                         },
                         {
@@ -64,8 +72,8 @@ exports.buildMenu = function() {
                             click: () => clipboard.writeText(sabaki.getSGF())
                         },
                         {
-                            label: t('menu.file', '复制 ASCII 图表'),
-                            click: () => clipboard.writeText(gametree.getBoard(...treePosition()).generateAscii())
+                            label: t('menu.file', '复制 &ASCII 图表'),
+                            click: () => clipboard.writeText(sabaki.getBoardAscii())
                         }
                     ]
                 },
@@ -78,6 +86,7 @@ exports.buildMenu = function() {
                 {
                     label: t('menu.file', '管理棋局…'),
                     accelerator: 'CmdOrCtrl+Shift+M',
+                    enabled: !disableGameNavigation,
                     click: () => sabaki.openDrawer('gamechooser')
                 },
                 {type: 'separator'},
@@ -90,7 +99,7 @@ exports.buildMenu = function() {
         },
         {
             id: 'play',
-            label: t('menu.play', '对局中(&P)'),
+            label: t('menu.play', '对局中'),
             submenu: [
                 {
                     label: t('menu.play', '切换对局者'),
@@ -465,24 +474,29 @@ exports.buildMenu = function() {
                     click: () => sabaki.openDrawer('advancedproperties')
                 },
                 {type: 'separator'},
-                {
-                    label: t('menu.tools', '顺时针旋转-棋盘'),
+               {
+                    label: t('menu.tools', '顺时针旋转'),
+                    enabled: !disableGameNavigation,
                     click: () => sabaki.rotateBoard(false)
-                },
-                {
+               },
+               {
                     label: t('menu.tools', '逆时针旋转-棋盘'),
+                    enabled: !disableGameNavigation,
                     click: () => sabaki.rotateBoard(true)
-                },
-                {
+               },
+               {
                     label: t('menu.tools', '水平翻转-棋盘'),
+                    enabled: !disableGameNavigation,
                     click: () => sabaki.flipBoard(true)
-                },
-                {
+               },
+               {
                     label: t('menu.tools', '垂直翻转-棋盘'),
+                    enabled: !disableGameNavigation,
                     click: () => sabaki.flipBoard(false)
-                },
-                {
+               },
+               {
                     label: t('menu.tools', '反转颜色-棋子'),
+                    enabled: !disableGameNavigation,
                     click: () => sabaki.invertColors()
                 }
             ]
@@ -504,33 +518,39 @@ exports.buildMenu = function() {
                 {
                     label: t('menu.view', '显示坐标'),
                     accelerator: 'CmdOrCtrl+Shift+C',
-                    checked: 'view.show_coordinates',
+                    type: 'checkbox',
+                    checked: setting.get('view.show_coordinates'),
                     click: () => toggleSetting('view.show_coordinates')
                 },
                 {
                     label: t('menu.view', '显示手数编号'),
-                    checked: 'view.show_move_numbers',
+                    type: 'checkbox',
+                    checked: setting.get('view.show_move_numbers'),
                     click: () => toggleSetting('view.show_move_numbers')
                 },
                 {
                     label: t('menu.view', '显示移动彩色化'),
-                    checked: 'view.show_move_colorization',
+                    type: 'checkbox',
+                    checked: setting.get('view.show_move_colorization'),
                     click: () => toggleSetting('view.show_move_colorization')
                 },
                 {
                     label: t('menu.view', '显示下一步'),
-                    checked: 'view.show_next_moves',
+                    type: 'checkbox',
+                    checked: setting.get('view.show_next_moves'),
                     click: () => toggleSetting('view.show_next_moves')
                 },
                 {
                     label: t('menu.view', '显示同级变化'),
-                    checked: 'view.show_siblings',
+                    type: 'checkbox',
+                    checked: setting.get('view.show_siblings'),
                     click: () => toggleSetting('view.show_siblings')
                 },
                 {type: 'separator'},
                 {
                     label: t('menu.view', '显示棋局树'),
-                    checked: 'view.show_graph',
+                    type: 'checkbox',
+                    checked: setting.get('view.show_graph'),
                     accelerator: 'CmdOrCtrl+T',
                     click: () => {
                         toggleSetting('view.show_graph')
@@ -539,7 +559,8 @@ exports.buildMenu = function() {
                 },
                 {
                     label: t('menu.view', '显示注释'),
-                    checked: 'view.show_comments',
+                    type: 'checkbox',
+                    checked: setting.get('view.show_comments'),
                     accelerator: 'CmdOrCtrl+Shift+T',
                     click: () => {
                         toggleSetting('view.show_comments')
@@ -578,7 +599,7 @@ exports.buildMenu = function() {
                 {
                     label: t('menu.file', 'New &Window'),
                     clickMain: 'newWindow',
-                    enabled: true
+                    neverDisable: true
                 },
                 {role: 'minimize'},
                 {type: 'separator'},
@@ -735,36 +756,32 @@ exports.buildMenu = function() {
         viewMenu.submenu.splice(0, 1)
     }
 
-    // Generate ids for all menu items
-
-    let generateIds = (menu, idPrefix = '') => {
+    let processMenu = (menu, idPrefix = '') => {
         menu.forEach((item, i) => {
+            // Generate id
+
             if (item.id == null) {
                 item.id = idPrefix + i
             }
 
+            // Handle disableAll prop
+
+            if (disableAll && !item.neverDisable && !('submenu' in item || 'role' in item)) {
+                item.enabled = false
+            }
+
             if ('submenu' in item) {
-                generateIds(item.submenu, `${item.id}-`)
+                processMenu(item.submenu, `${item.id}-`)
             }
         })
 
         return menu
     }
 
-    menu = generateIds(data)
+    menu = processMenu(data)
     return menu
 }
 
-exports.buildMenu()
-
-exports.clone = function(x = menu) {
-    if (Array.isArray(x)) {
-        return [...Array(x.length)].map((_, i) => exports.clone(x[i]))
-    } else if (typeof x === 'object') {
-        let result = {}
-        for (let key in x) result[key] = exports.clone(x[key])
-        return result
-    }
-
-    return x
+exports.get = function(props) {
+    return exports.build(props)
 }
