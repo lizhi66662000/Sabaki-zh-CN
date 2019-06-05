@@ -22,7 +22,7 @@ class ScoreRow extends Component {
             h('th', {},
                 h('img', {
                     src: `./node_modules/@sabaki/shudan/css/stone_${sign}.png`,
-                    alt: sign > 0 ? t('Black') : t('White'),
+                    alt: sign > 0 ? t('黑') : t('白'),
                     width: 24,
                     height: 24
                 })
@@ -65,9 +65,9 @@ class ScoreDrawer extends Component {
         let score = board && board.getScore(areaMap, {handicap, komi})
         let result = score && (method === 'area' ? score.areaScore : score.territoryScore)
 
-        this.resultString = result > 0 ? t(p => `B+${p.result}`, {result})
-            : result < 0 ? t(p => `W+${p.result}`, {result: -result})
-            : t('Draw')
+        this.resultString = result > 0 ? t(p => `黑胜 B+${p.result}`, {result})
+            : result < 0 ? t(p => `白胜 W+${p.result}`, {result: -result})
+            : t('和棋')
 
         return h(Drawer,
             {
@@ -75,32 +75,32 @@ class ScoreDrawer extends Component {
                 show
             },
 
-            h('h2', {}, 'Score'),
+            h('h2', {}, '比分'),
 
             h('ul', {class: 'tabs'},
                 h('li', {class: classNames({current: method === 'area'})},
                     h('a', {
                         href: '#',
                         onClick: this.handleAreaButtonClick
-                    }, t('Area'))
+                    }, t('数子'))
                 ),
                 h('li', {class: classNames({current: method === 'territory'})},
                     h('a', {
                         href: '#',
                         onClick: this.handleTerritoryButtonClick
-                    }, t('Territory'))
+                    }, t('数目'))
                 )
             ),
 
             h('table', {},
                 h('thead', {}, h('tr', {},
                     h('th'),
-                    h('th', {disabled: method === 'territory'}, t('Area')),
-                    h('th', {disabled: method === 'area'}, t('Territory')),
-                    h('th', {disabled: method === 'area'}, t('Captures')),
-                    h('th', {}, t('Komi')),
-                    h('th', {disabled: method === 'territory'}, t('Handicap')),
-                    h('th', {}, t('Total'))
+                    h('th', {disabled: method === 'territory'}, t('子数')),
+                    h('th', {disabled: method === 'area'}, t('目数')),
+                    h('th', {disabled: method === 'area'}, t('提子')),
+                    h('th', {}, t('贴目')),
+                    h('th', {disabled: method === 'territory'}, t('贴子')),
+                    h('th', {}, t('总计'))
                 )),
                 h('tbody', {},
                     h(ScoreRow, {method, score, komi, handicap: 0, sign: 1}),
@@ -110,18 +110,18 @@ class ScoreDrawer extends Component {
 
             h('form', {},
                 h('p', {},
-                    t('Result:'), ' ',
+                    t('结果:'), ' ',
                     h('span', {class: 'result'}, this.resultString), ' ',
 
                     !estimating && h('button', {
                         type: 'submit',
                         onClick: this.handleSubmitButtonClick
-                    }, t('Update Result')), ' ',
+                    }, t('更新结果')), ' ',
 
                     h('button', {
                         type: 'reset',
                         onClick: this.handleCloseButtonClick
-                    }, t('Close'))
+                    }, t('关闭'))
                 )
             )
         )

@@ -143,7 +143,7 @@ class InfoDrawer extends Component {
 
             let template = [
                 {
-                    label: t('Manual'),
+                    label: t('人类'),
                     type: 'checkbox',
                     checked: this.state.engines[index] == null,
                     click: () => {
@@ -160,7 +160,7 @@ class InfoDrawer extends Component {
                 },
                 {type: 'separator'},
                 ...engines.map(engine => ({
-                    label: engine.name.trim() || t('(Unnamed Engine)'),
+                    label: engine.name.trim() || t('(未命名引擎)'),
                     type: 'checkbox',
                     checked: engine === this.state.engines[index],
                     click: () => {
@@ -175,7 +175,7 @@ class InfoDrawer extends Component {
                 })),
                 engines.length > 0 && {type: 'separator'},
                 {
-                    label: t('Manage Engines…'),
+                    label: t('管理引擎…'),
                     click: () => {
                         sabaki.setState({preferencesTab: 'engines'})
                         sabaki.openDrawer('preferences')
@@ -359,7 +359,7 @@ class InfoDrawer extends Component {
                         h('input', {
                             type: 'text',
                             name: 'rank_1',
-                            placeholder: t('Rank'),
+                            placeholder: t('等级'),
                             value: blackRank,
                             onInput: this.handleInputChange.blackRank
                         }),
@@ -368,7 +368,7 @@ class InfoDrawer extends Component {
                             ref: el => this.firstFocusElement = el,
                             type: 'text',
                             name: 'name_1',
-                            placeholder: t('Black'),
+                            placeholder: t('黑'),
                             value: blackName,
                             onInput: this.handleInputChange.blackName
                         })
@@ -378,7 +378,7 @@ class InfoDrawer extends Component {
                         class: 'current-player',
                         src: `./img/ui/player_${currentPlayer}.svg`,
                         height: 31,
-                        title: t('Swap'),
+                        title: t('交换'),
                         onClick: this.handleSwapPlayers
                     }),
 
@@ -386,7 +386,7 @@ class InfoDrawer extends Component {
                         h('input', {
                             type: 'text',
                             name: 'name_-1',
-                            placeholder: t('White'),
+                            placeholder: t('白'),
                             value: whiteName,
                             onInput: this.handleInputChange.whiteName
                         }),
@@ -394,7 +394,7 @@ class InfoDrawer extends Component {
                         h('input', {
                             type: 'text',
                             name: 'rank_-1',
-                            placeholder: t('Rank'),
+                            placeholder: t('等级'),
                             value: whiteRank,
                             onInput: this.handleInputChange.whiteRank
                         }), ' ',
@@ -411,27 +411,27 @@ class InfoDrawer extends Component {
                 ),
 
                 h('ul', {},
-                    h(InfoDrawerItem, {title: t('Name')},
+                    h(InfoDrawerItem, {title: t('名称 ')},
                         h('input', {
                             type: 'text',
-                            placeholder: t('(Unnamed)'),
+                            placeholder: t('（未命名）'),
                             value: gameName,
                             onInput: this.handleInputChange.gameName
                         })
                     ),
-                    h(InfoDrawerItem, {title: t('Event')},
+                    h(InfoDrawerItem, {title: t('赛事 ')},
                         h('input', {
                             type: 'text',
-                            placeholder: t('None'),
+                            placeholder: t('无'),
                             value: eventName,
                             onInput: this.handleInputChange.eventName
                         })
                     ),
-                    h(InfoDrawerItem, {title: t('Date')},
+                    h(InfoDrawerItem, {title: t('日期 ')},
                         h('input', {
                             ref: el => this.dateInputElement = el,
                             type: 'text',
-                            placeholder: t('None'),
+                            placeholder: t('无'),
                             value: date,
 
                             onFocus: this.handleDateInputFocus,
@@ -439,7 +439,7 @@ class InfoDrawer extends Component {
                             onInput: this.handleDateInputChange
                         })
                     ),
-                    h(InfoDrawerItem, {title: t('Comment')},
+                    h(InfoDrawerItem, {title: t('贴目 ')},
                         h('input', {
                             type: 'text',
                             placeholder: t('None'),
@@ -447,11 +447,11 @@ class InfoDrawer extends Component {
                             onInput: this.handleInputChange.gameComment
                         })
                     ),
-                    h(InfoDrawerItem, {title: t('Result')},
+                    h(InfoDrawerItem, {title: t('结果 ')},
                         showResult
                         ? h('input', {
                             type: 'text',
-                            placeholder: t('None'),
+                            placeholder: t('无'),
                             value: result,
                             onInput: this.handleInputChange.result
                         })
@@ -460,7 +460,7 @@ class InfoDrawer extends Component {
                             onClick: this.handleShowResultClick
                         }, t('Show'))
                     ),
-                    h(InfoDrawerItem, {title: t('Komi')},
+                    h(InfoDrawerItem, {title: t('让子')},
                         h('input', {
                             type: 'number',
                             name: 'komi',
@@ -478,15 +478,15 @@ class InfoDrawer extends Component {
                                 onChange: this.handleInputChange.handicap
                             },
 
-                            h('option', {value: 0}, t('No stones')),
+                            h('option', {value: 0}, t('不让子')),
                             [...Array(8)].map((_, i) =>
-                                h('option', {value: i + 2}, t(p => `${p.stones} stones`, {
+                                h('option', {value: i + 2}, t(p => `${p.stones}  子`, {
                                     stones: i + 2
                                 }))
                             )
                         )
                     ),
-                    h(InfoDrawerItem, {title: t('Board Size')},
+                    h(InfoDrawerItem, {title: t('棋盘大小 ')},
                         h('input', {
                             type: 'number',
                             name: 'size-width',
@@ -500,7 +500,7 @@ class InfoDrawer extends Component {
                         }), ' ',
 
                         h('span', {
-                            title: t('Swap'),
+                            title: t('交换'),
                             style: {cursor: emptyTree ? 'pointer': 'default'},
                             onClick: !emptyTree ? helper.noop : this.handleSizeSwapButtonClick
                         }, '×'), ' ',
@@ -519,8 +519,8 @@ class InfoDrawer extends Component {
                 ),
 
                 h('p', {},
-                    h('button', {type: 'submit', onClick: this.handleSubmitButtonClick}, t('OK')), ' ',
-                    h('button', {type: 'reset', onClick: this.handleCancelButtonClick}, t('Cancel'))
+                    h('button', {type: 'submit', onClick: this.handleSubmitButtonClick}, t('确认')), ' ',
+                    h('button', {type: 'reset', onClick: this.handleCancelButtonClick}, t('取消'))
                 )
             )
         )

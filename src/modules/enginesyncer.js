@@ -156,11 +156,11 @@ class EngineSyncer extends EventEmitter {
         let board = gametree.getBoard(tree, id)
 
         if (!board.isSquare()) {
-            throw new Error('GTP engines don’t support non-square boards.')
+            throw new Error('GTP 引擎不支持非方形棋盘。')
         } else if (!board.isValid()) {
             throw new Error('GTP engines don’t support invalid board positions.')
         } else if (board.width > alpha.length) {
-            throw new Error(`GTP engines only support board sizes that don’t exceed ${alpha.length}.`)
+            throw new Error(`GTP 引擎仅支持棋盘尺寸不超过 ${alpha.length}.`)
         }
 
         // Update komi
@@ -343,7 +343,7 @@ class EngineSyncer extends EventEmitter {
             if (success) return
         }
 
-        throw new Error('Current board arrangement can’t be recreated on the GTP engine.')
+        throw new Error('GTP 引擎无法在当前棋盘重新创建布局。')
     }
 }
 

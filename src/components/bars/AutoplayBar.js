@@ -93,7 +93,7 @@ class AutoplayBar extends Component {
 
                         onChange: this.handleValueChange
                     }), ' ',
-                    t('sec per move')
+                    t('秒一步')
                 )
             ),
 

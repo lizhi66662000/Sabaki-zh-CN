@@ -80,7 +80,7 @@ class CleanMarkupDrawer extends Component {
 
             let template = [
                 {
-                    label: t('From Current &Position'),
+                    label: t('从当前位置'),
                     click: () => doRemove(properties => {
                         return this.props.gameTree.mutate(draft => {
                             for (let prop of properties) {
@@ -90,7 +90,7 @@ class CleanMarkupDrawer extends Component {
                     })
                 },
                 {
-                    label: t('From Entire &Game'),
+                    label: t('从整个对局'),
                     click: () => doRemove(properties => {
                         return this.props.gameTree.mutate(draft => {
                             for (let node of this.props.gameTree.listNodes()) {
@@ -121,57 +121,57 @@ class CleanMarkupDrawer extends Component {
                 show
             },
 
-            h('h2', {}, t('Clean Markup')),
+            h('h2', {}, t('清理标记')),
 
             h('form', {},
                 h('ul', {},
                     h(CleanMarkupItem, {
                         id: 'cleanmarkup.cross',
-                        text: t('Cross markers')
+                        text: t('交叉标记')
                     }),
                     h(CleanMarkupItem, {
                         id: 'cleanmarkup.triangle',
-                        text: t('Triangle markers')
+                        text: t('三角标记')
                     }),
                     h(CleanMarkupItem, {
                         id: 'cleanmarkup.square',
-                        text: t('Square markers')
+                        text: t('方形标记')
                     }),
                     h(CleanMarkupItem, {
                         id: 'cleanmarkup.circle',
-                        text: t('Circle markers')
+                        text: t('圆形标记')
                     })
                 ),
                 h('ul', {},
                     h(CleanMarkupItem, {
                         id: 'cleanmarkup.line',
-                        text: t('Line markers')
+                        text: t('线标记')
                     }),
                     h(CleanMarkupItem, {
                         id: 'cleanmarkup.arrow',
-                        text: t('Arrow markers')
+                        text: t('箭头标记')
                     }),
                     h(CleanMarkupItem, {
                         id: 'cleanmarkup.label',
-                        text: t('Label markers')
+                        text: t('标签标记')
                     })
                 ),
                 h('ul', {},
                     h(CleanMarkupItem, {
                         id: 'cleanmarkup.comments',
-                        text: t('Comments')
+                        text: t('评论')
                     }),
                     h(CleanMarkupItem, {
                         id: 'cleanmarkup.annotations',
-                        text: t('Annotations')
+                        text: t('注释')
                     }),
                     h(CleanMarkupItem, {
                         id: 'cleanmarkup.hotspots',
-                        text: t('Hotspots markers')
+                        text: t('热点标记')
                     }),
                     h(CleanMarkupItem, {
                         id: 'cleanmarkup.winrate',
-                        text: t('Winrate data')
+                        text: t('胜率数据')
                     })
                 ),
 
@@ -180,9 +180,9 @@ class CleanMarkupDrawer extends Component {
                         type: 'button',
                         class: 'dropdown',
                         onClick: this.handleRemoveButtonClick
-                    }, t('Remove')), ' ',
+                    }, t('清除')), ' ',
 
-                    h('button', {onClick: this.handleCloseButtonClick}, t('Close'))
+                    h('button', {onClick: this.handleCloseButtonClick}, t('关闭'))
                 )
             )
         )

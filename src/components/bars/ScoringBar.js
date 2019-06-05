@@ -15,7 +15,7 @@ class ScoringBar extends Component {
 
         return h(Bar, Object.assign({type}, this.props),
             h('div', {class: 'result'},
-                h('button', {onClick: this.handleButtonClick}, t('Details')),
+                h('button', {onClick: this.handleButtonClick}, t('详细信息')),
                 h('strong', {},
                     !result ? ''
                     : result > 0 ? t(p => `B+${p.result}`, {result})
@@ -25,8 +25,8 @@ class ScoringBar extends Component {
             ), ' ',
 
             type === 'scoring'
-            ? t('Please select dead stones.')
-            : t('Toggle group status.')
+            ? t('请选择死子。')
+            : t('切换地域状态。')
         )
     }
 }

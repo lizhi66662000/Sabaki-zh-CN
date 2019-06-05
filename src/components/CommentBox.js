@@ -60,7 +60,7 @@ class CommentTitle extends Component {
 
             let today = new Date()
             if (today.getDate() === 25 && today.getMonth() === 3)
-                return t('Happy Birthday, Sabaki!')
+                return t('生日快乐, Sabaki!')
 
             return ''
         }
@@ -113,7 +113,7 @@ class CommentTitle extends Component {
                 {
                     class: 'help',
                     href: patternMatch.pattern.url,
-                    title: t('View article on Sensei’s Library'),
+                    title: t('查看 Sensei 网站文库的文章'),
                     'data-vertices': JSON.stringify(matchedVertices),
 
                     onClick: this.handleMoveNameHelpClick,
@@ -132,10 +132,10 @@ class CommentTitle extends Component {
         title
     }) {
         let moveData = {
-            '-1': [t('Bad move'), 'badmove'],
-            '0': [t('Doubtful move'), 'doubtfulmove'],
-            '1': [t('Interesting move'), 'interestingmove'],
-            '2': [t('Good move'), 'goodmove']
+            '-1': [t('恶手'), 'badmove'],
+            '0': [t('疑问手'), 'doubtfulmove'],
+            '1': [t('趣向'), 'interestingmove'],
+            '2': [t('好棋'), 'goodmove']
         }
 
         if (mv > 1) {
@@ -145,10 +145,10 @@ class CommentTitle extends Component {
         }
 
         let positionData = {
-            '-1': [t('Good for white'), 'white'],
-            '0': [t('Even position'), 'balance'],
-            '1': [t('Good for black'), 'black'],
-            '-2': [t('Unclear position'), 'unclear']
+            '-1': [t('白好'), 'white'],
+            '0': [t('形势两分'), 'balance'],
+            '1': [t('黑好'), 'black'],
+            '-2': [t('形势不明'), 'unclear']
         }
 
         if (pv > 1) {
@@ -187,7 +187,7 @@ class CommentTitle extends Component {
             h('img', {
                 src: './node_modules/octicons/build/svg/pencil.svg',
                 class: 'edit-button',
-                title: t('Edit'),
+                title: t('编辑'),
                 width: 16,
                 height: 16,
                 onClick: this.handleEditButtonClick
@@ -345,7 +345,7 @@ class CommentBox extends Component {
                             type: 'text',
                             name: 'title',
                             value: title,
-                            placeholder: t('Title'),
+                            placeholder: t('标题'),
                             onInput: this.handleCommentInput
                         })
                     )
@@ -353,7 +353,7 @@ class CommentBox extends Component {
 
                 h('textarea', {
                     ref: el => this.textareaElement = el,
-                    placeholder: t('Comment'),
+                    placeholder: t('注释'),
                     value: comment,
                     onInput: this.handleCommentInput
                 })

@@ -38,7 +38,7 @@ class FindBar extends Component {
                 h('input', {
                     ref: el => this.inputElement = el,
                     type: 'text',
-                    placeholder: t('Find'),
+                    placeholder: t('查找'),
                     value: findText,
                     onInput: this.handleChange
                 }),
