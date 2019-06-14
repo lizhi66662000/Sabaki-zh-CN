@@ -866,7 +866,7 @@ header {
     }
     #score th {
         font-weight: normal;
-        font-size: .8em;
+        font-size: 1.0em;
         text-transform: uppercase;
     }
     #score td {
