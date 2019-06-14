@@ -406,14 +406,14 @@ exports.build = function(props = {}) {
                 },
                 {
                     label: t('menu.engines', '暂停－引擎'),
-                    enabled: true,
+                    neverDisable: true,
                     click: () => sabaki.suspendEngines()
                 },
                 {type: 'separator'},
                 {
                     label: t('menu.engines', '同步'),
                     accelerator: 'F6',
-                    click: () => sabaki.syncEngines()
+                    click: () => sabaki.syncEngines({showErrorDialog: true})
                 },
                 {
                     label: t('menu.engines', '切换分析'),
@@ -472,32 +472,6 @@ exports.build = function(props = {}) {
                 {
                     label: t('menu.tools', '编辑 SGF 属性…'),
                     click: () => sabaki.openDrawer('advancedproperties')
-                },
-                {type: 'separator'},
-               {
-                    label: t('menu.tools', '顺时针旋转－棋盘'),
-                    enabled: !disableGameNavigation,
-                    click: () => sabaki.rotateBoard(false)
-               },
-               {
-                    label: t('menu.tools', '逆时针旋转－棋盘'),
-                    enabled: !disableGameNavigation,
-                    click: () => sabaki.rotateBoard(true)
-               },
-               {
-                    label: t('menu.tools', '水平翻转－棋盘'),
-                    enabled: !disableGameNavigation,
-                    click: () => sabaki.flipBoard(true)
-               },
-               {
-                    label: t('menu.tools', '垂直翻转－棋盘'),
-                    enabled: !disableGameNavigation,
-                    click: () => sabaki.flipBoard(false)
-               },
-               {
-                    label: t('menu.tools', '反转颜色－棋子'),
-                    enabled: !disableGameNavigation,
-                    click: () => sabaki.invertColors()
                 }
             ]
         },
@@ -591,6 +565,41 @@ exports.build = function(props = {}) {
                             click: () => setting.set('app.zoom_factor', 1)
                         }
                     ]
+                },
+                {
+                    label: t('menu.view', 'T&ransform Board'),
+                    submenu: [
+                        {
+                            label: t('menu.tools', '逆时针旋转－棋盘 Rotate &Anticlockwise'),
+                            accelerator: 'CmdOrCtrl+Alt+Left',
+                            click: () => sabaki.pushBoardTransformation('rrr')
+                        },
+                        {
+                            label: t('menu.tools', '顺时针旋转－棋盘 Rotate &Clockwise'),
+                            accelerator: 'CmdOrCtrl+Alt+Right',
+                            click: () => sabaki.pushBoardTransformation('r')
+                        },
+                        {
+                            label: t('menu.tools', '水平翻转－棋盘 &Flip Horizontally'),
+                            accelerator: 'CmdOrCtrl+Alt+Down',
+                            click: () => sabaki.pushBoardTransformation('f')
+                        },
+                        {
+                            label: t('menu.tools', '垂直翻转－棋盘 Flip &Vertically'),
+                            accelerator: 'CmdOrCtrl+Alt+Shift+Down',
+                            click: () => sabaki.pushBoardTransformation('rrf')
+                        },
+                        {
+                            label: t('menu.tools', '反转颜色－棋子 &Invert Colors'),
+                            accelerator: 'CmdOrCtrl+Alt+Up',
+                            click: () => sabaki.pushBoardTransformation('i')
+                        },
+                        {
+                            label: t('menu.tools', '重置 &Reset'),
+                            accelerator: 'CmdOrCtrl+Alt+0',
+                            click: () => sabaki.setBoardTransformation('')
+                        }
+                    ]
                 }
             ]
         },
@@ -625,7 +634,7 @@ exports.build = function(props = {}) {
                 {
                     label: t('menu.help', '检查更新'),
                     clickMain: 'checkForUpdates',
-                    enabled: true
+                    neverDisable: true
                 },
                 {type: 'separator'},
                 {
