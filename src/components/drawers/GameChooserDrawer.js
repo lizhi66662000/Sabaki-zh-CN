@@ -78,8 +78,8 @@ class GameListItem extends Component {
                     visible: showThumbnail
                 }),
 
-                h('span', {class: 'black', title: blackRank}, blackName || t('Black')),
-                h('span', {class: 'white', title: whiteRank}, whiteName || t('White'))
+                h('span', {class: 'black', title: blackRank}, blackName || t('黑')),
+                h('span', {class: 'white', title: whiteRank}, whiteName || t('白'))
             )
         )
     }
@@ -126,12 +126,12 @@ class GameChooserDrawer extends Component {
                     }
                 },
                 {
-                    label: t('删除其它对局'),
+                    label: t('删除其它棋局'),
                     click: () => {
                         if (dialog.showMessageBox(
-                            t('你真的想永久删除所有其它对局吗？'),
+                            t('你真的想永久删除所有其它棋局吗？'),
                             'warning',
-                            [t('删除对局'), t('取消')], 1
+                            [t('删除棋局'), t('取消')], 1
                         ) === 1) return
 
                         let {onChange = helper.noop} = this.props
@@ -259,10 +259,10 @@ class GameChooserDrawer extends Component {
                 {label: t('执白'), click: sortWith(gamesort.byPlayerWhite)},
                 {label: t('黑等级'), click: sortWith(gamesort.byBlackRank)},
                 {label: t('白等级'), click: sortWith(gamesort.byWhiteRank)},
-                {label: t('对局名称'), click: sortWith(gamesort.byGameName)},
+                {label: t('棋局名称'), click: sortWith(gamesort.byGameName)},
                 {label: t('赛事'), click: sortWith(gamesort.byEvent)},
                 {label: t('日期'), click: sortWith(gamesort.byDate)},
-                {label: t('棋局手数'), click: sortWith(gamesort.byNumberOfMoves)},
+                {label: t('对局手数'), click: sortWith(gamesort.byNumberOfMoves)},
                 {type: 'separator'},
                 {label: t('反向'), click: sortWith(gamesort.reverse)}
             ]
@@ -415,12 +415,12 @@ class GameChooserDrawer extends Component {
                     show
                 },
 
-                h('h2', {}, t('对局管理')),
+                h('h2', {}, t('管理棋局')),
 
                 h('input', {
                     type: 'search',
                     name: 'filter',
-                    placeholder: t('过滤'),
+                    placeholder: t('筛选'),
                     value: filterText,
                     onInput: this.handleFilterTextChange
                 }),

@@ -67,7 +67,7 @@ class EditBar extends Component {
                     [t('三角工具'), 'triangle'],
                     [t('方形工具'), 'square'],
                     [t('圆形工具'), 'circle'],
-                    [t('线工具'), 'line'],
+                    [t('线条工具'), 'line'],
                     [t('箭头工具'), 'arrow'],
                     [t('标签工具'), 'label'],
                     [t('数字工具'), 'number']

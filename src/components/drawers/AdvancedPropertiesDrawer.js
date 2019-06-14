@@ -195,8 +195,8 @@ class AdvancedPropertiesDrawer extends Component {
                 ),
 
                 h('p', {},
-                    h('button', {class: 'add', type: 'button', onClick: this.handleAddButtonClick}, t('Add')),
-                    h('button', {onClick: this.handleCloseButtonClick}, t('Close'))
+                    h('button', {class: 'add', type: 'button', onClick: this.handleAddButtonClick}, t('添加')),
+                    h('button', {onClick: this.handleCloseButtonClick}, t('关闭'))
                 )
             )
         )

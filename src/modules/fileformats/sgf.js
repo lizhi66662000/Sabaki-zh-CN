@@ -6,7 +6,7 @@ const {getId} = require('../helper')
 const gametree = require('../gametree')
 
 exports.meta = {
-    name: t('Smart Game Format'),
+    name: t('通用棋谱格式'),
     extensions: ['sgf', 'rsgf']
 }
 

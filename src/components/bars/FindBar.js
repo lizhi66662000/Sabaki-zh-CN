@@ -47,14 +47,14 @@ class FindBar extends Component {
                     h('img', {
                         src: './node_modules/octicons/build/svg/chevron-down.svg',
                         height: 20,
-                        alt: t('Next')
+                        alt: t('下一步')
                     })
                 ),
                 h('button', {class: 'prev', onClick: this.handleButtonClick},
                     h('img', {
                         src: './node_modules/octicons/build/svg/chevron-up.svg',
                         height: 20,
-                        alt: t('Previous')
+                        alt: t('上一步')
                     })
                 )
             )

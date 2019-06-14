@@ -145,7 +145,7 @@ class CleanMarkupDrawer extends Component {
                 h('ul', {},
                     h(CleanMarkupItem, {
                         id: 'cleanmarkup.line',
-                        text: t('线标记')
+                        text: t('线条标记')
                     }),
                     h(CleanMarkupItem, {
                         id: 'cleanmarkup.arrow',

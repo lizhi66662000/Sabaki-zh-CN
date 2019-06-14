@@ -353,7 +353,7 @@ class CommentBox extends Component {
 
                 h('textarea', {
                     ref: el => this.textareaElement = el,
-                    placeholder: t('注释'),
+                    placeholder: t('评论'),
                     value: comment,
                     onInput: this.handleCommentInput
                 })

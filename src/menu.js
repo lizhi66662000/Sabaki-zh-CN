@@ -72,7 +72,7 @@ exports.build = function(props = {}) {
                             click: () => clipboard.writeText(sabaki.getSGF())
                         },
                         {
-                            label: t('menu.file', '复制 &ASCII 图表'),
+                            label: t('menu.file', '复制 &ASCII 图'),
                             click: () => clipboard.writeText(sabaki.getBoardAscii())
                         }
                     ]
@@ -91,7 +91,7 @@ exports.build = function(props = {}) {
                 },
                 {type: 'separator'},
                 {
-                    label: t('menu.file', '偏好设置…'),
+                    label: t('menu.file', '偏好…'),
                     accelerator: 'CmdOrCtrl+,',
                     click: () => sabaki.openDrawer('preferences')
                 }
@@ -99,7 +99,7 @@ exports.build = function(props = {}) {
         },
         {
             id: 'play',
-            label: t('menu.play', '对局中'),
+            label: t('menu.play', '棋局中(&P)'),
             submenu: [
                 {
                     label: t('menu.play', '切换对局者'),
@@ -109,7 +109,7 @@ exports.build = function(props = {}) {
                 {
                     label: t('menu.play', '选择点'),
                     accelerator: 'CmdOrCtrl+L',
-                    click: () => dialog.showInputBox('Enter a coordinate to select a point', ({value}) => {
+                    click: () => dialog.showInputBox('输入坐标以选择点', ({value}) => {
                         sabaki.clickVertex(value)
                     })
                 },
@@ -127,11 +127,11 @@ exports.build = function(props = {}) {
                 },
                 {type: 'separator'},
                 {
-                    label: t('menu.play', '估算-形势判断'),
+                    label: t('menu.play', '估算－形势判断'),
                     click: () => sabaki.setMode('estimator')
                 },
                 {
-                    label: t('menu.play', '比分-点目'),
+                    label: t('menu.play', '比分－点目'),
                     click: () => sabaki.setMode('scoring')
                 }
             ]
@@ -188,7 +188,7 @@ exports.build = function(props = {}) {
                             click: () => selectTool('circle')
                         },
                         {
-                            label: t('menu.edit', '线形工具'),
+                            label: t('menu.edit', '线条工具'),
                             accelerator: 'CmdOrCtrl+6',
                             click: () => selectTool('line')
                         },
@@ -237,7 +237,7 @@ exports.build = function(props = {}) {
                 },
                 {type: 'separator'},
                 {
-                    label: t('menu.edit', '压平-成为根节点'),
+                    label: t('menu.edit', '变平－为根节点'),
                     click: () => sabaki.flattenVariation(...treePosition())
                 },
                 {
@@ -397,23 +397,23 @@ exports.build = function(props = {}) {
                 },
                 {type: 'separator'},
                 {
-                    label: t('menu.engines', '附加-引擎…'),
+                    label: t('menu.engines', '连接－引擎…'),
                     click: () => sabaki.openDrawer('info')
                 },
                 {
-                    label: t('menu.engines', '取消-引擎'),
+                    label: t('menu.engines', '分离－引擎'),
                     click: () => sabaki.detachEngines()
                 },
                 {
-                    label: t('menu.engines', '暂停-引擎'),
-                    enabled: true,
+                    label: t('menu.engines', '暂停－引擎'),
+                    neverDisable: true,
                     click: () => sabaki.suspendEngines()
                 },
                 {type: 'separator'},
                 {
                     label: t('menu.engines', '同步'),
                     accelerator: 'F6',
-                    click: () => sabaki.syncEngines()
+                    click: () => sabaki.syncEngines({showErrorDialog: true})
                 },
                 {
                     label: t('menu.engines', '切换分析'),
@@ -457,11 +457,11 @@ exports.build = function(props = {}) {
             label: t('menu.tools', '工具(&T)'),
             submenu: [
                 {
-                    label: t('menu.tools', '切换到自动打谱模式'),
+                    label: t('menu.tools', '切换自动打谱模式'),
                     click: () => sabaki.setMode(sabaki.state.mode === 'autoplay' ? 'play' : 'autoplay')
                 },
                 {
-                    label: t('menu.tools', '切换到猜局打谱模式'),
+                    label: t('menu.tools', '切换猜局模式'),
                     click: () => sabaki.setMode(sabaki.state.mode === 'guess' ? 'play' : 'guess')
                 },
                 {type: 'separator'},
@@ -472,32 +472,6 @@ exports.build = function(props = {}) {
                 {
                     label: t('menu.tools', '编辑 SGF 属性…'),
                     click: () => sabaki.openDrawer('advancedproperties')
-                },
-                {type: 'separator'},
-               {
-                    label: t('menu.tools', '顺时针旋转'),
-                    enabled: !disableGameNavigation,
-                    click: () => sabaki.rotateBoard(false)
-               },
-               {
-                    label: t('menu.tools', '逆时针旋转-棋盘'),
-                    enabled: !disableGameNavigation,
-                    click: () => sabaki.rotateBoard(true)
-               },
-               {
-                    label: t('menu.tools', '水平翻转-棋盘'),
-                    enabled: !disableGameNavigation,
-                    click: () => sabaki.flipBoard(true)
-               },
-               {
-                    label: t('menu.tools', '垂直翻转-棋盘'),
-                    enabled: !disableGameNavigation,
-                    click: () => sabaki.flipBoard(false)
-               },
-               {
-                    label: t('menu.tools', '反转颜色-棋子'),
-                    enabled: !disableGameNavigation,
-                    click: () => sabaki.invertColors()
                 }
             ]
         },
@@ -591,6 +565,41 @@ exports.build = function(props = {}) {
                             click: () => setting.set('app.zoom_factor', 1)
                         }
                     ]
+                },
+                {
+                    label: t('menu.view', '转换棋盘'),
+                    submenu: [
+                        {
+                            label: t('menu.view', '逆时针旋转－棋盘'),
+                            accelerator: 'CmdOrCtrl+Alt+Left',
+                            click: () => sabaki.pushBoardTransformation('rrr')
+                        },
+                        {
+                            label: t('menu.view', '顺时针旋转－棋盘'),
+                            accelerator: 'CmdOrCtrl+Alt+Right',
+                            click: () => sabaki.pushBoardTransformation('r')
+                        },
+                        {
+                            label: t('menu.view', '水平翻转－棋盘'),
+                            accelerator: 'CmdOrCtrl+Alt+Down',
+                            click: () => sabaki.pushBoardTransformation('f')
+                        },
+                        {
+                            label: t('menu.view', '垂直翻转－棋盘'),
+                            accelerator: 'CmdOrCtrl+Alt+Shift+Down',
+                            click: () => sabaki.pushBoardTransformation('rrf')
+                        },
+                        {
+                            label: t('menu.view', '反转颜色－棋子'),
+                            accelerator: 'CmdOrCtrl+Alt+Up',
+                            click: () => sabaki.pushBoardTransformation('i')
+                        },
+                        {
+                            label: t('menu.view', '重置'),
+                            accelerator: 'CmdOrCtrl+Alt+0',
+                            click: () => sabaki.setBoardTransformation('')
+                        }
+                    ]
                 }
             ]
         },
@@ -625,7 +634,7 @@ exports.build = function(props = {}) {
                 {
                     label: t('menu.help', '检查更新'),
                     clickMain: 'checkForUpdates',
-                    enabled: true
+                    neverDisable: true
                 },
                 {type: 'separator'},
                 {
@@ -640,19 +649,19 @@ exports.build = function(props = {}) {
         },
         setting.get('debug.dev_tools') && {
             id: 'developer',
-            label: t('menu.developer', 'Devel&oper'),
+            label: t('menu.developer', '开发人员(&O)'),
             submenu: [
                 {
-                    label: t('menu.developer', 'Open Settings &Folder'),
+                    label: t('menu.developer', '打开设置文件夹'),
                     click: () => shell.showItemInFolder(setting.settingsPath)
                 },
                 {
-                    label: t('menu.developer', 'Toggle &Developer Tools'),
+                    label: t('menu.developer', '切换开发人员工具'),
                     click: () => remote.getCurrentWindow().webContents.toggleDevTools()
                 },
                 {type: 'separator'},
                 {
-                    label: t('menu.developer', 'Load &Language File…'),
+                    label: t('menu.developer', '加载语言文件…'),
                     click: () => {
                         dialog.showOpenDialog({
                             properties: ['openFile'],
@@ -670,13 +679,13 @@ exports.build = function(props = {}) {
                     }
                 },
                 {
-                    label: t('menu.developer', '&Unload Language File'),
+                    label: t('menu.developer', '卸载语言文件'),
                     click: () => {
                         i18n.loadStrings({})
                     }
                 },
                 {
-                    label: t('menu.developer', '&Save Language File…'),
+                    label: t('menu.developer', '保存语言文件…'),
                     click: () => {
                         dialog.showSaveDialog({
                             filters: [

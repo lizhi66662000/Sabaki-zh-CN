@@ -75,7 +75,7 @@ class GeneralTab extends Component {
             h('ul', {},
                 h(PreferencesItem, {
                     id: 'app.enable_hardware_acceleration',
-                    text: t('如果可能的话启用硬件加速')
+                    text: t('如果可能启用硬件加速')
                 }),
                 h(PreferencesItem, {
                     id: 'app.startup_check_updates',
@@ -88,15 +88,15 @@ class GeneralTab extends Component {
                 }),
                 h(PreferencesItem, {
                     id: 'game.goto_end_after_loading',
-                    text: t('加载棋谱文件后跳转到最后一步')
+                    text: t('加载棋谱文件后跳到最后一步')
                 }),
                 h(PreferencesItem, {
                     id: 'view.fuzzy_stone_placement',
-                    text: t('模糊(不对齐)棋子摆放')
+                    text: t('棋子(不对齐)模糊摆放')
                 }),
                 h(PreferencesItem, {
                     id: 'view.animated_stone_placement',
-                    text: t('动态模糊棋子摆放')
+                    text: t('棋子动态(仿真实对局)模糊摆放')
                 }),
                 h(PreferencesItem, {
                     id: 'board.variation_instant_replay',
@@ -104,18 +104,18 @@ class GeneralTab extends Component {
                 }),
                 h(PreferencesItem, {
                     id: 'gtp.start_game_after_attach',
-                    text: t('附加引擎后立即开始对局')
+                    text: t('连接引擎后立即开始对局')
                 }),
                 h(PreferencesItem, {
                     id: 'gtp.auto_genmove',
-                    text: t('引擎自动生成走法')
+                    text: t('自动生成引擎走法')
                 })
             ),
 
             h('ul', {},
                 h(PreferencesItem, {
                     id: 'comments.show_move_interpretation',
-                    text: t('自动在注释标题栏显示行棋术语')
+                    text: t('评论标题栏自动显示行棋术语')
                 }),
                 h(PreferencesItem, {
                     id: 'game.show_ko_warning',
@@ -152,7 +152,7 @@ class GeneralTab extends Component {
             ),
 
             h('p', {}, h('label', {},
-                t('棋局树样式:'), ' ',
+                t('棋局树样式：'), ' ',
 
                 h('select', {onChange: this.handleTreeStyleChange},
                     h('option', {
@@ -351,7 +351,7 @@ class ThemesTab extends Component {
                 })
             ),
 
-            h('h3', {}, '当前主题'),
+            h('h3', {}, t('当前主题')),
 
             h('p', {},
                 h('select',
@@ -389,7 +389,7 @@ class ThemesTab extends Component {
 
             currentTheme && [
                 h('p', {class: 'meta'},
-                    currentTheme.author && t(p => `by ${p.author}`, {
+                    currentTheme.author && t(p => `作者：${p.author}`, {
                         author: currentTheme.author
                     }),
                     currentTheme.author && currentTheme.homepage && ' — ',

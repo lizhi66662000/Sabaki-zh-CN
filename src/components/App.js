@@ -28,11 +28,11 @@ const EngineSyncer = require('../modules/enginesyncer')
 const dialog = require('../modules/dialog')
 const fileformats = require('../modules/fileformats')
 const gametree = require('../modules/gametree')
+const gobantransformer = require('../modules/gobantransformer')
 const gtplogger = require('../modules/gtplogger')
 const helper = require('../modules/helper')
 const setting = remote.require('./setting')
 const sound = require('../modules/sound')
-const treetransformer = require('../modules/treetransformer')
 
 class App extends Component {
     constructor() {
@@ -324,6 +324,17 @@ class App extends Component {
             this.window.setAutoHideMenuBar(!this.state.showMenuBar)
         }
 
+        // Handle bars & drawers
+
+        if (
+            ['estimator', 'scoring'].includes(prevState.mode)
+            && this.state.mode !== 'estimator'
+            && this.state.mode !== 'scoring'
+            && this.state.openDrawer === 'score'
+        ) {
+            this.closeDrawer()
+        }
+
         // Handle sidebar showing/hiding
 
         if (
@@ -588,7 +599,7 @@ class App extends Component {
                 properties: ['openFile'],
                 filters: [
                     ...fileformats.meta,
-                    {name: t('All Files'), extensions: ['*']}
+                    {name: t('所有文件'), extensions: ['*']}
                 ]
             }, ({result}) => {
                 if (result) filename = result[0]
@@ -685,7 +696,8 @@ class App extends Component {
                 representedFilename: null,
                 gameIndex: 0,
                 gameTrees,
-                gameCurrents: gameTrees.map(_ => ({}))
+                gameCurrents: gameTrees.map(_ => ({})),
+                boardTransformation: ''
             })
 
             let [firstTree, ] = gameTrees
@@ -716,7 +728,7 @@ class App extends Component {
             dialog.showSaveDialog({
                 filters: [
                     fileformats.sgf.meta,
-                    {name: t('All Files'), extensions: ['*']}
+                    {name: t('所有文件'), extensions: ['*']}
                 ]
             }, ({result}) => {
                 if (result) this.saveFile(result, false)
@@ -752,6 +764,87 @@ class App extends Component {
         return sgf.stringify(gameTrees.map(tree => tree.root), {
             linebreak: setting.get('sgf.format_code') ? helper.linebreak : ''
         })
+    }
+
+    getBoardAscii() {
+        let {boardTransformation} = this.state
+        let tree = this.state.gameTrees[this.state.gameIndex]
+        let board = gametree.getBoard(tree, this.state.treePosition)
+        let signMap = gobantransformer.transformMap(board.arrangement, boardTransformation)
+        let markerMap = gobantransformer.transformMap(board.markers, boardTransformation)
+        let lines = board.lines.map(l =>
+            gobantransformer.transformLine(l, boardTransformation, board.width, board.height)
+        )
+
+        let height = signMap.length
+        let width = height === 0 ? 0 : signMap[0].length
+        let result = []
+        let lb = helper.linebreak
+
+        let getIndexFromVertex = ([x, y]) => {
+            let rowLength = 4 + width * 2
+            return rowLength + rowLength * y + 1 + x * 2 + 1
+        }
+
+        // Make empty board
+
+        result.push('+')
+        for (let x = 0; x < width; x++) result.push('-', '-')
+        result.push('-', '+', lb)
+
+        for (let y = 0; y < height; y++) {
+            result.push('|')
+            for (let x = 0; x < width; x++) result.push(' ', '.')
+            result.push(' ', '|', lb)
+        }
+
+        result.push('+')
+        for (let x = 0; x < width; x++) result.push('-', '-')
+        result.push('-', '+', lb)
+
+        for (let vertex of new Board(width, height).getHandicapPlacement(9)){
+            result[getIndexFromVertex(vertex)] = ','
+        }
+
+        // Place markers & stones
+
+        let data = {
+            plain: ['O', null, 'X'],
+            circle: ['W', 'C', 'B'],
+            square: ['@', 'S', '#'],
+            triangle: ['Q', 'T', 'Y'],
+            cross: ['P', 'M', 'Z'],
+            label: ['O', null, 'X']
+        }
+
+        for (let x = 0; x < width; x++) {
+            for (let y = 0; y < height; y++) {
+                let i = getIndexFromVertex([x, y])
+                let s = signMap[y][x]
+
+                if (!markerMap[y][x] || !(markerMap[y][x].type in data)) {
+                    if (s !== 0) result[i] = data.plain[s + 1]
+                } else {
+                    let {type, label} = markerMap[y][x]
+
+                    if (type !== 'label' || s !== 0) {
+                        result[i] = data[type][s + 1]
+                    } else if (s === 0 && label.length === 1 && isNaN(parseFloat(label))) {
+                        result[i] = label.toLowerCase()
+                    }
+                }
+            }
+        }
+
+        result = result.join('')
+
+        // Add lines & arrows
+
+        for (let {v1, v2, type} of lines) {
+            result += `{${type === 'arrow' ? 'AR' : 'LN'} ${this.vertex2coord(v1)} ${this.vertex2coord(v2)}}${lb}`
+        }
+
+        return (lb + result.trim()).split(lb).map(l => `$$ ${l}`).join(lb)
     }
 
     generateTreeHash() {
@@ -1757,30 +1850,16 @@ class App extends Component {
         this.setCurrentTreePosition(newTree, treePosition)
     }
 
-    rotateBoard(anticlockwise) {
-        let {treePosition, gameTrees, gameIndex} = this.state
-        let tree = gameTrees[gameIndex]
-        let {size} = this.getGameInfo(tree)
-        let newTree = treetransformer.rotateTree(tree, size[0], size[1], anticlockwise)
-
-        this.setCurrentTreePosition(newTree, treePosition, {clearCache: true})
+    setBoardTransformation(transformation) {
+        this.setState({
+            boardTransformation: gobantransformer.normalize(transformation)
+        })
     }
 
-    flipBoard(horizontal) {
-        let {treePosition, gameTrees, gameIndex} = this.state
-        let tree = gameTrees[gameIndex]
-        let {size} = this.getGameInfo(tree)
-        let newTree = treetransformer.flipTree(tree, size[0], size[1], horizontal)
-
-        this.setCurrentTreePosition(newTree, treePosition, {clearCache: true})
-    }
-
-    invertColors() {
-        let {treePosition, gameTrees, gameIndex} = this.state
-        let tree = gameTrees[gameIndex]
-        let newTree = treetransformer.invertTreeColors(tree)
-
-        this.setCurrentTreePosition(newTree, treePosition, {clearCache: true})
+    pushBoardTransformation(transformation) {
+        this.setState(({boardTransformation}) => ({
+            boardTransformation: gobantransformer.normalize(boardTransformation + transformation)
+        }))
     }
 
     copyVariation(tree, treePosition) {
@@ -2033,7 +2112,7 @@ class App extends Component {
             },
             {type: 'separator'},
             {
-                label: t('使其成主变化'),
+                label: t('升为主变化'),
                 click: () => this.makeMainVariation(tree, treePosition)
             },
             {
@@ -2046,7 +2125,7 @@ class App extends Component {
             },
             {type: 'separator'},
             {
-                label: t('压平-成为根节点'),
+                label: t('变平－为根节点'),
                 click: () => this.flattenVariation(tree, treePosition)
             },
             {
