@@ -143,7 +143,7 @@ class InfoDrawer extends Component {
 
             let template = [
                 {
-                    label: t('人类'),
+                    label: t('Manual'),
                     type: 'checkbox',
                     checked: this.state.engines[index] == null,
                     click: () => {
@@ -160,7 +160,7 @@ class InfoDrawer extends Component {
                 },
                 {type: 'separator'},
                 ...engines.map(engine => ({
-                    label: engine.name.trim() || t('（未命名引擎）'),
+                    label: engine.name.trim() || t('(Unnamed Engine)'),
                     type: 'checkbox',
                     checked: engine === this.state.engines[index],
                     click: () => {
@@ -175,7 +175,7 @@ class InfoDrawer extends Component {
                 })),
                 engines.length > 0 && {type: 'separator'},
                 {
-                    label: t('管理引擎…'),
+                    label: t('Manage Engines…'),
                     click: () => {
                         sabaki.setState({preferencesTab: 'engines'})
                         sabaki.openDrawer('preferences')
@@ -254,11 +254,11 @@ class InfoDrawer extends Component {
             yearRange: 6,
             keyboardInput: false,
             i18n: {
-                previousMonth: t('上个月'),
-                nextMonth: t('下个月'),
-                months: [t('一月'), t('二月'), t('三月'), t('四月'), t('五月'), t('六月'), t('七月'), t('八月'), t('九月'), t('十月'), t('十一月'), t('十二月')],
-                weekdays: [t('星期日'), t('星期一'), t('星期二'), t('星期三'), t('星期四'), t('星期五'), t('星期六')],
-                weekdaysShort: [t('周日'), t('周一'), t('周二'), t('周三'), t('周四'), t('周五'), t('周六')]
+                previousMonth: t('Previous Month'),
+                nextMonth: t('Next Month'),
+                months: [t('January'), t('February'), t('March'), t('April'), t('May'), t('June'), t('July'), t('August'), t('September'), t('October'), t('November'), t('December')],
+                weekdays: [t('Sunday'), t('Monday'), t('Tuesday'), t('Wednesday'), t('Thursday'), t('Friday'), t('Saturday')],
+                weekdaysShort: [t('Sun'), t('Mon'), t('Tue'), t('Wed'), t('Thu'), t('Fri'), t('Sat')]
             },
 
             onOpen: () => {
@@ -359,7 +359,7 @@ class InfoDrawer extends Component {
                         h('input', {
                             type: 'text',
                             name: 'rank_1',
-                            placeholder: t('等级'),
+                            placeholder: t('Rank'),
                             value: blackRank,
                             onInput: this.handleInputChange.blackRank
                         }),
@@ -368,7 +368,7 @@ class InfoDrawer extends Component {
                             ref: el => this.firstFocusElement = el,
                             type: 'text',
                             name: 'name_1',
-                            placeholder: t('黑'),
+                            placeholder: t('Black'),
                             value: blackName,
                             onInput: this.handleInputChange.blackName
                         })
@@ -378,7 +378,7 @@ class InfoDrawer extends Component {
                         class: 'current-player',
                         src: `./img/ui/player_${currentPlayer}.svg`,
                         height: 31,
-                        title: t('交换'),
+                        title: t('Swap'),
                         onClick: this.handleSwapPlayers
                     }),
 
@@ -386,7 +386,7 @@ class InfoDrawer extends Component {
                         h('input', {
                             type: 'text',
                             name: 'name_-1',
-                            placeholder: t('白'),
+                            placeholder: t('White'),
                             value: whiteName,
                             onInput: this.handleInputChange.whiteName
                         }),
@@ -394,7 +394,7 @@ class InfoDrawer extends Component {
                         h('input', {
                             type: 'text',
                             name: 'rank_-1',
-                            placeholder: t('等级'),
+                            placeholder: t('Rank'),
                             value: whiteRank,
                             onInput: this.handleInputChange.whiteRank
                         }), ' ',
@@ -411,27 +411,27 @@ class InfoDrawer extends Component {
                 ),
 
                 h('ul', {},
-                    h(InfoDrawerItem, {title: t('名称 ')},
+                    h(InfoDrawerItem, {title: t('Name')},
                         h('input', {
                             type: 'text',
-                            placeholder: t('（未命名）'),
+                            placeholder: t('(Unnamed)'),
                             value: gameName,
                             onInput: this.handleInputChange.gameName
                         })
                     ),
-                    h(InfoDrawerItem, {title: t('赛事 ')},
+                    h(InfoDrawerItem, {title: t('Event')},
                         h('input', {
                             type: 'text',
-                            placeholder: t('无'),
+                            placeholder: t('None'),
                             value: eventName,
                             onInput: this.handleInputChange.eventName
                         })
                     ),
-                    h(InfoDrawerItem, {title: t('日期 ')},
+                    h(InfoDrawerItem, {title: t('Date')},
                         h('input', {
                             ref: el => this.dateInputElement = el,
                             type: 'text',
-                            placeholder: t('无'),
+                            placeholder: t('None'),
                             value: date,
 
                             onFocus: this.handleDateInputFocus,
@@ -439,28 +439,28 @@ class InfoDrawer extends Component {
                             onInput: this.handleDateInputChange
                         })
                     ),
-                    h(InfoDrawerItem, {title: t('注释 ')},
+                    h(InfoDrawerItem, {title: t('Comment')},
                         h('input', {
                             type: 'text',
-                            placeholder: t('无'),
+                            placeholder: t('None'),
                             value: gameComment,
                             onInput: this.handleInputChange.gameComment
                         })
                     ),
-                    h(InfoDrawerItem, {title: t('结果 ')},
+                    h(InfoDrawerItem, {title: t('Result')},
                         showResult
                         ? h('input', {
                             type: 'text',
-                            placeholder: t('无'),
+                            placeholder: t('None'),
                             value: result,
                             onInput: this.handleInputChange.result
                         })
                         : h('button', {
                             type: 'button',
                             onClick: this.handleShowResultClick
-                        }, t('显示'))
+                        }, t('Show'))
                     ),
-                    h(InfoDrawerItem, {title: t('贴目 ')},
+                    h(InfoDrawerItem, {title: t('Komi')},
                         h('input', {
                             type: 'number',
                             name: 'komi',
@@ -470,7 +470,7 @@ class InfoDrawer extends Component {
                             onInput: this.handleInputChange.komi
                         })
                     ),
-                    h(InfoDrawerItem, {title: t('让子 ')},
+                    h(InfoDrawerItem, {title: t('Handicap')},
                         h('select',
                             {
                                 selectedIndex: Math.max(0, handicap - 1),
@@ -478,15 +478,15 @@ class InfoDrawer extends Component {
                                 onChange: this.handleInputChange.handicap
                             },
 
-                            h('option', {value: 0}, t('不让子')),
+                            h('option', {value: 0}, t('No stones')),
                             [...Array(8)].map((_, i) =>
-                                h('option', {value: i + 2}, t(p => `${p.stones}  子`, {
+                                h('option', {value: i + 2}, t(p => `${p.stones} stones`, {
                                     stones: i + 2
                                 }))
                             )
                         )
                     ),
-                    h(InfoDrawerItem, {title: t('棋盘大小 ')},
+                    h(InfoDrawerItem, {title: t('Board Size')},
                         h('input', {
                             type: 'number',
                             name: 'size-width',
@@ -500,7 +500,7 @@ class InfoDrawer extends Component {
                         }), ' ',
 
                         h('span', {
-                            title: t('交换'),
+                            title: t('Swap'),
                             style: {cursor: emptyTree ? 'pointer': 'default'},
                             onClick: !emptyTree ? helper.noop : this.handleSizeSwapButtonClick
                         }, '×'), ' ',
@@ -519,8 +519,8 @@ class InfoDrawer extends Component {
                 ),
 
                 h('p', {},
-                    h('button', {type: 'submit', onClick: this.handleSubmitButtonClick}, t('确认')), ' ',
-                    h('button', {type: 'reset', onClick: this.handleCancelButtonClick}, t('取消'))
+                    h('button', {type: 'submit', onClick: this.handleSubmitButtonClick}, t('OK')), ' ',
+                    h('button', {type: 'reset', onClick: this.handleCancelButtonClick}, t('Cancel'))
                 )
             )
         )

@@ -314,12 +314,12 @@ class App extends Component {
         // Handle full screen & menu bar
 
         if (prevState.fullScreen !== this.state.fullScreen) {
-            if (this.state.fullScreen) this.flashInfoOverlay(t('按ESC退出全屏模式'))
+            if (this.state.fullScreen) this.flashInfoOverlay(t('Press Esc to exit full screen mode'))
             this.window.setFullScreen(this.state.fullScreen)
         }
 
         if (prevState.showMenuBar !== this.state.showMenuBar) {
-            if (!this.state.showMenuBar) this.flashInfoOverlay(t('按ALT显示菜单栏'))
+            if (!this.state.showMenuBar) this.flashInfoOverlay(t('Press Alt to show menu bar'))
             this.window.setMenuBarVisibility(this.state.showMenuBar)
             this.window.setAutoHideMenuBar(!this.state.showMenuBar)
         }
@@ -599,7 +599,7 @@ class App extends Component {
                 properties: ['openFile'],
                 filters: [
                     ...fileformats.meta,
-                    {name: t('所有文件'), extensions: ['*']}
+                    {name: t('All Files'), extensions: ['*']}
                 ]
             }, ({result}) => {
                 if (result) filename = result[0]
@@ -629,7 +629,7 @@ class App extends Component {
 
             if (gameTrees.length == 0) throw true
         } catch (err) {
-            dialog.showMessageBox(t('此文件不可读。'), 'warning')
+            dialog.showMessageBox(t('This file is unreadable.'), 'warning')
             success = false
         }
 
@@ -666,7 +666,7 @@ class App extends Component {
 
             if (gameTrees.length == 0) throw true
         } catch (err) {
-            dialog.showMessageBox(t('此文件无法读取。'), 'warning')
+            dialog.showMessageBox(t('This file is unreadable.'), 'warning')
             success = false
         }
 
@@ -728,7 +728,7 @@ class App extends Component {
             dialog.showSaveDialog({
                 filters: [
                     fileformats.sgf.meta,
-                    {name: t('所有文件'), extensions: ['*']}
+                    {name: t('All Files'), extensions: ['*']}
                 ]
             }, ({result}) => {
                 if (result) this.saveFile(result, false)
@@ -869,9 +869,9 @@ class App extends Component {
 
         if (hash !== this.treeHash) {
             let answer = dialog.showMessageBox(
-                t('如果您关闭该文件不保存，更改将丢失。'),
+                t('Your changes will be lost if you close this file without saving.'),
                 'warning',
-                [t('保存'), t('不保存'), t('取消')], 2
+                [t('Save'), t('Don’t Save'), t('Cancel')], 2
             )
 
             if (answer === 0) return this.saveFile(this.state.representedFilename)
@@ -888,10 +888,10 @@ class App extends Component {
         if (hash != null && hash !== this.fileHash) {
             let answer = dialog.showMessageBox(
                 t(p => [
-                    `此文件已更改 ${p.appName}.`,
-                    '要重新加载文件吗？ 您的更改将会丢失。'
+                    `This file has been changed outside of ${p.appName}.`,
+                    'Do you want to reload the file? Your changes will be lost.'
                 ].join('\n'), {appName: this.appName}),
-                'warning', [t('重新加载'), t('不重新加载')], 1
+                'warning', [t('Reload'), t('Don’t Reload')], 1
             )
 
             if (answer === 0) {
@@ -998,11 +998,11 @@ class App extends Component {
                 } else if (['number', 'label'].includes(tool)) {
                     // Show label editing context menu
 
-                    let click = () => dialog.showInputBox(t('输入标签文本'), ({value}) => {
+                    let click = () => dialog.showInputBox(t('Enter label text'), ({value}) => {
                         this.useTool('label', vertex, value)
                     })
 
-                    let template = [{label: t('编辑标签'), click}]
+                    let template = [{label: t('&Edit Label'), click}]
                     helper.popupMenu(template, x, y)
 
                     return
@@ -1125,11 +1125,11 @@ class App extends Component {
 
                 if (ko && dialog.showMessageBox(
                     t([
-                        '您重复下在棋盘有子的位置上。',
-                        '按围棋规则这是无效的。'
+                        'You are about to play a move which repeats a previous board position.',
+                        'This is invalid in some rulesets.'
                     ].join('\n')),
                     'info',
-                    [t('死活下子'), t('不下子')], 1
+                    [t('Play Anyway'), t('Don’t Play')], 1
                 ) != 0) return
             }
 
@@ -1148,11 +1148,11 @@ class App extends Component {
             if (suicide && setting.get('game.show_suicide_warning')) {
                 if (dialog.showMessageBox(
                     t([
-                        '自杀行为。',
-                        '按围棋规则这是无效的。'
+                        'You are about to play a suicide move.',
+                        'This is invalid in some rulesets.'
                     ].join('\n')),
                     'info',
-                    [t('死活下子'), t('不下子')], 1
+                    [t('Play Anyway'), t('Don’t Play')], 1
                 ) != 0) return
             }
         }
@@ -2001,7 +2001,7 @@ class App extends Component {
         let node = tree.get(treePosition)
 
         if (node.parentId == null) {
-            dialog.showMessageBox(t('无法删除根节点。'), 'warning')
+            dialog.showMessageBox(t('The root node cannot be removed.'), 'warning')
             return
         }
 
@@ -2009,9 +2009,9 @@ class App extends Component {
             suppressConfirmation !== true
             && setting.get('edit.show_removenode_warning')
             && dialog.showMessageBox(
-                t('你真的想删除这个节点吗？'),
+                t('Do you really want to remove this node?'),
                 'warning',
-                [t('删除节点'), t('取消')], 1
+                [t('Remove Node'), t('Cancel')], 1
             ) === 1
         ) return
 
@@ -2042,9 +2042,9 @@ class App extends Component {
             suppressConfirmation !== true
             && setting.get('edit.show_removeothervariations_warning')
             && dialog.showMessageBox(
-                t('你真的想删除所有其他变化？'),
+                t('Do you really want to remove all other variations?'),
                 'warning',
-                [t('删除变化'), t('取消')], 1
+                [t('Remove Variations'), t('Cancel')], 1
             ) == 1
         ) return
 
@@ -2099,41 +2099,41 @@ class App extends Component {
         let t = i18n.context('menu.edit')
         let template = [
             {
-                label: t('复制变化'),
+                label: t('&Copy Variation'),
                 click: () => this.copyVariation(tree, treePosition)
             },
             {
-                label: t('剪切变化'),
+                label: t('Cu&t Variation'),
                 click: () => this.cutVariation(tree, treePosition)
             },
             {
-                label: t('粘贴变化'),
+                label: t('&Paste Variation'),
                 click: () => this.pasteVariation(tree, treePosition)
             },
             {type: 'separator'},
             {
-                label: t('升为主变化'),
+                label: t('Make Main &Variation'),
                 click: () => this.makeMainVariation(tree, treePosition)
             },
             {
-                label: t('左移'),
+                label: t('Shift &Left'),
                 click: () => this.shiftVariation(tree, treePosition, -1)
             },
             {
-                label: t('右移'),
+                label: t('Shift Ri&ght'),
                 click: () => this.shiftVariation(tree, treePosition, 1)
             },
             {type: 'separator'},
             {
-                label: t('变平－为根节点'),
+                label: t('&Flatten'),
                 click: () => this.flattenVariation(tree, treePosition)
             },
             {
-                label: t('删除节点'),
+                label: t('&Remove Node'),
                 click: () => this.removeNode(tree, treePosition)
             },
             {
-                label: t('删除其它变化'),
+                label: t('Remove &Other Variations'),
                 click: () => this.removeOtherVariations(tree, treePosition)
             }
         ]
@@ -2147,29 +2147,29 @@ class App extends Component {
 
         let template = [
             {
-                label: t('清除注释'),
+                label: t('&Clear Annotations'),
                 click: () => {
                     this.setComment(tree, treePosition, {positionAnnotation: null, moveAnnotation: null})
                 }
             },
             {type: 'separator'},
             {
-                label: t('黑好'),
+                label: t('Good for &Black'),
                 type: 'checkbox',
                 data: {positionAnnotation: 'GB'}
             },
             {
-                label: t('形势不明'),
+                label: t('&Unclear Position'),
                 type: 'checkbox',
                 data: {positionAnnotation: 'UC'}
             },
             {
-                label: t('形势两分'),
+                label: t('&Even Position'),
                 type: 'checkbox',
                 data: {positionAnnotation: 'DM'}
             },
             {
-                label: t('白好'),
+                label: t('Good for &White'),
                 type: 'checkbox',
                 data: {positionAnnotation: 'GW'}
             }
@@ -2179,22 +2179,22 @@ class App extends Component {
             template.push(
                 {type: 'separator'},
                 {
-                    label: t('好棋'),
+                    label: t('&Good Move'),
                     type: 'checkbox',
                     data: {moveAnnotation: 'TE'}
                 },
                 {
-                    label: t('趣向'),
+                    label: t('&Interesting Move'),
                     type: 'checkbox',
                     data: {moveAnnotation: 'IT'}
                 },
                 {
-                    label: t('疑问手'),
+                    label: t('&Doubtful Move'),
                     type: 'checkbox',
                     data: {moveAnnotation: 'DO'}
                 },
                 {
-                    label: t('恶手'),
+                    label: t('B&ad Move'),
                     type: 'checkbox',
                     data: {moveAnnotation: 'BM'}
                 }
@@ -2204,7 +2204,7 @@ class App extends Component {
         template.push(
             {type: 'separator'},
             {
-                label: t('热点'),
+                label: t('&Hotspot'),
                 type: 'checkbox',
                 data: {hotspot: true}
             }
@@ -2231,12 +2231,12 @@ class App extends Component {
         let tree = gameTrees[gameIndex]
 
         helper.popupMenu([{
-            label: t('添加变化'),
+            label: t('&Add Variation'),
             click: () => {
                 let isRootNode = tree.get(treePosition).parentId == null
 
                 if (appendSibling && isRootNode) {
-                    dialog.showMessageBox(t('根节点不能有同级节点。'), 'warning')
+                    dialog.showMessageBox(t('The root node cannot have sibling nodes.'), 'warning')
                     return
                 }
 
@@ -2584,7 +2584,7 @@ class App extends Component {
         }
 
         if (showWarning && error) {
-            dialog.showMessageBox(t('您没有安装任何支持分析的引擎。'), 'warning')
+            dialog.showMessageBox(t('You haven’t attached any engines that supports analysis.'), 'warning')
             this.stopAnalysis()
         }
     }
@@ -2652,7 +2652,7 @@ class App extends Component {
         }
 
         if (firstMove && followUp && otherSyncer != null) {
-            this.flashInfoOverlay(t('按 Esc 键停止对局。'))
+            this.flashInfoOverlay(t('Press Esc to stop playing'))
         }
 
         let {commands} = this.attachedEngineSyncers[playerIndex]
@@ -2693,7 +2693,7 @@ class App extends Component {
             pass = false
 
             if (responseContent.toLowerCase() === 'resign') {
-                dialog.showMessageBox(t(p => `${p.engineName} 已经认输。`, {
+                dialog.showMessageBox(t(p => `${p.engineName} has resigned.`, {
                     engineName: playerSyncer.engine.name
                 }))
 
@@ -2733,7 +2733,7 @@ class App extends Component {
 
         let t = i18n.context('app.engine')
 
-        this.showInfoOverlay(t('请等待…'))
+        this.showInfoOverlay(t('Please wait…'))
         this.setState({generatingMoves: false})
     }
 

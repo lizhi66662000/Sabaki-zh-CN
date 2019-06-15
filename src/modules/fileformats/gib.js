@@ -6,7 +6,7 @@ const Board = require('../board')
 const gametree = require('../gametree')
 
 exports.meta = {
-    name: t('TOM/奕城棋谱格式'),
+    name: t('Tygem GIB'),
     extensions: ['gib']
 }
 

@@ -866,7 +866,7 @@ header {
     }
     #score th {
         font-weight: normal;
-        font-size: 1.0em;
+        font-size: .8em;
         text-transform: uppercase;
     }
     #score td {
@@ -912,7 +912,7 @@ header {
     #preferences form > div > h3 {
         position: relative;
         margin-bottom: 1.5em;
-        font-size: .9em;
+        font-size: .8em;
         font-weight: normal;
         text-transform: uppercase;
         letter-spacing: 2px;

@@ -97,7 +97,7 @@ function buildMenu(props = {}) {
 
     let dockMenu = Menu.buildFromTemplate([
         {
-            label: i18n.t('menu.file', '新窗口(&W)'),
+            label: i18n.t('menu.file', 'New &Window'),
             click: () => newWindow()
         }
     ])
@@ -116,9 +116,9 @@ async function checkForUpdates({showFailDialogs = false} = {}) {
             dialog.showMessageBox({
                 type: 'info',
                 buttons: [
-                    t('下载更新'),
-                    t('查看更新日志'),
-                    t('现在不更新')
+                    t('Download Update'),
+                    t('View Changelog'),
+                    t('Not Now')
                 ],
                 title: app.getName(),
                 message: t(p => `${p.appName} v${p.version} is available now.`, {
@@ -140,8 +140,8 @@ async function checkForUpdates({showFailDialogs = false} = {}) {
             dialog.showMessageBox({
                 type: 'info',
                 buttons: [t('OK')],
-                title: t('没有可用的更新'),
-                message: t(p => `Sabaki v${p.version} 是最新版本。`, {
+                title: t('No updates available'),
+                message: t(p => `Sabaki v${p.version} is the latest version.`, {
                     version: app.getVersion()
                 })
             }, () => {})
@@ -152,7 +152,7 @@ async function checkForUpdates({showFailDialogs = false} = {}) {
                 type: 'warning',
                 buttons: [t('OK')],
                 title: app.getName(),
-                message: t('检查更新时出错。')
+                message: t('An error occurred while checking for updates.')
             })
         }
     }

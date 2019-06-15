@@ -78,8 +78,8 @@ class GameListItem extends Component {
                     visible: showThumbnail
                 }),
 
-                h('span', {class: 'black', title: blackRank}, blackName || t('黑')),
-                h('span', {class: 'white', title: whiteRank}, whiteName || t('白'))
+                h('span', {class: 'black', title: blackRank}, blackName || t('Black')),
+                h('span', {class: 'white', title: whiteRank}, whiteName || t('White'))
             )
         )
     }
@@ -111,12 +111,12 @@ class GameChooserDrawer extends Component {
         this.handleItemContextMenu = evt => {
             helper.popupMenu([
                 {
-                    label: t('删除对局'),
+                    label: t('&Remove Game'),
                     click: () => {
                         if (dialog.showMessageBox(
-                            t('你真的想永久删除此对局吗？'),
+                            t('Do you really want to remove this game permanently?'),
                             'warning',
-                            [t('删除对局'), t('取消')], 1
+                            [t('Remove Game'), t('Cancel')], 1
                         ) === 1) return
 
                         let {gameTrees, onChange = helper.noop} = this.props
@@ -126,12 +126,12 @@ class GameChooserDrawer extends Component {
                     }
                 },
                 {
-                    label: t('删除其它棋局'),
+                    label: t('Remove &Other Games'),
                     click: () => {
                         if (dialog.showMessageBox(
-                            t('你真的想永久删除所有其它棋局吗？'),
+                            t('Do you really want to remove all other games permanently?'),
                             'warning',
-                            [t('删除棋局'), t('取消')], 1
+                            [t('Remove Games'), t('Cancel')], 1
                         ) === 1) return
 
                         let {onChange = helper.noop} = this.props
@@ -196,7 +196,7 @@ class GameChooserDrawer extends Component {
         this.handleAddButtonClick = evt => {
             let template = [
                 {
-                    label: t('添加新对局'),
+                    label: t('Add &New Game'),
                     click: () => {
                         let tree = sabaki.getEmptyGameTree()
                         let {gameTrees, onChange = helper.noop} = this.props
@@ -205,13 +205,13 @@ class GameChooserDrawer extends Component {
                     }
                 },
                 {
-                    label: t('添加现有文件…'),
+                    label: t('Add &Existing Files…'),
                     click: () => {
                         dialog.showOpenDialog({
                             properties: ['openFile', 'multiSelections'],
                             filters: [
                                 ...fileformats.meta,
-                                {name: t('所有文件'), extensions: ['*']}
+                                {name: t('All Files'), extensions: ['*']}
                             ]
                         }, ({result}) => {
                             let {gameTrees, onChange = helper.noop} = this.props
@@ -226,7 +226,7 @@ class GameChooserDrawer extends Component {
                                         newTrees.push(...trees)
                                     }
                                 } catch (err) {
-                                    dialog.showMessageBox(t('有些文件不可读。'), 'warning')
+                                    dialog.showMessageBox(t('Some files are unreadable.'), 'warning')
                                 }
                             }
 
@@ -255,16 +255,16 @@ class GameChooserDrawer extends Component {
             }
 
             let template = [
-                {label: t('执黑'), click: sortWith(gamesort.byPlayerBlack)},
-                {label: t('执白'), click: sortWith(gamesort.byPlayerWhite)},
-                {label: t('黑等级'), click: sortWith(gamesort.byBlackRank)},
-                {label: t('白等级'), click: sortWith(gamesort.byWhiteRank)},
-                {label: t('棋局名称'), click: sortWith(gamesort.byGameName)},
-                {label: t('赛事'), click: sortWith(gamesort.byEvent)},
-                {label: t('日期'), click: sortWith(gamesort.byDate)},
-                {label: t('对局手数'), click: sortWith(gamesort.byNumberOfMoves)},
+                {label: t('&Black Player'), click: sortWith(gamesort.byPlayerBlack)},
+                {label: t('&White Player'), click: sortWith(gamesort.byPlayerWhite)},
+                {label: t('Black R&ank'), click: sortWith(gamesort.byBlackRank)},
+                {label: t('White Ran&k'), click: sortWith(gamesort.byWhiteRank)},
+                {label: t('Game &Name'), click: sortWith(gamesort.byGameName)},
+                {label: t('Game &Event'), click: sortWith(gamesort.byEvent)},
+                {label: t('&Date'), click: sortWith(gamesort.byDate)},
+                {label: t('Number of &Moves'), click: sortWith(gamesort.byNumberOfMoves)},
                 {type: 'separator'},
-                {label: t('反向'), click: sortWith(gamesort.reverse)}
+                {label: t('&Reverse'), click: sortWith(gamesort.reverse)}
             ]
 
             let element = evt.currentTarget
@@ -415,12 +415,12 @@ class GameChooserDrawer extends Component {
                     show
                 },
 
-                h('h2', {}, t('管理棋局')),
+                h('h2', {}, t('Manage Games')),
 
                 h('input', {
                     type: 'search',
                     name: 'filter',
-                    placeholder: t('筛选'),
+                    placeholder: t('Filter'),
                     value: filterText,
                     onInput: this.handleFilterTextChange
                 }),
@@ -477,18 +477,18 @@ class GameChooserDrawer extends Component {
                         type: 'button',
                         class: 'dropdown',
                         onClick: this.handleAddButtonClick
-                    }, t('添加')),
+                    }, t('Add')),
 
                     h('button', {
                         type: 'button',
                         class: 'dropdown',
                         onClick: this.handleSortButtonClick
-                    }, t('排序方式')),
+                    }, t('Sort By')),
 
                     h('button', {
                         type: 'button',
                         onClick: this.handleCloseButtonClick
-                    }, t('关闭'))
+                    }, t('Close'))
                 )
             ),
 

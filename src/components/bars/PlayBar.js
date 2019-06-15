@@ -18,36 +18,36 @@ class PlayBar extends Component {
             let {left, top} = this.menuButtonElement.getBoundingClientRect()
             helper.popupMenu([
                 {
-                    label: t('通过一手'),
+                    label: t('&Pass'),
                     click: () => {
                         let autoGenmove = setting.get('gtp.auto_genmove')
                         sabaki.makeMove([-1, -1], {sendToEngine: autoGenmove})
                     }
                 },
                 {
-                    label: t('认输'),
+                    label: t('&Resign'),
                     click: () => sabaki.makeResign()
                 },
                 {type: 'separator'},
                 {
-                    label: t('估算-形势判断'),
+                    label: t('Es&timate'),
                     click: () => sabaki.setMode('estimator')
                 },
                 {
-                    label: t('比分-点目'),
+                    label: t('&Score'),
                     click: () => sabaki.setMode('scoring')
                 },
                 {
-                    label: t('编辑'),
+                    label: t('&Edit'),
                     click: () => sabaki.setMode('edit')
                 },
                 {
-                    label: t('查找'),
+                    label: t('&Find'),
                     click: () => sabaki.setMode('find')
                 },
                 {type: 'separator'},
                 {
-                    label: t('对局信息'),
+                    label: t('&Info'),
                     click: () => sabaki.openDrawer('info')
                 }
             ], left, top)
@@ -89,7 +89,7 @@ class PlayBar extends Component {
                 })
             },
 
-            h('div', {class: 'hotspot', title: t('热点')}),
+            h('div', {class: 'hotspot', title: t('Hotspot')}),
 
             h('span', {class: 'playercontent player_1'},
                 h('span', {class: 'captures', style: captureStyle(0)}, playerCaptures[0]), ' ',
@@ -104,18 +104,18 @@ class PlayBar extends Component {
                 h('span',
                     {
                         class: classNames('name', {engine: isEngine[0]}),
-                        title: isEngine[0] && t('引擎')
+                        title: isEngine[0] && t('Engine')
                     },
                     isEngine[0] && playerBusy[0] && h(TextSpinner),
                     ' ',
-                    playerNames[0] || t('黑')
+                    playerNames[0] || t('Black')
                 )
             ),
 
             h('a',
                 {
                     class: 'current-player',
-                    title: t('改变对局者'),
+                    title: t('Change Player'),
                     onClick: onCurrentPlayerClick
                 },
                 h('img', {
@@ -136,9 +136,9 @@ class PlayBar extends Component {
                 h('span',
                     {
                         class: classNames('name', {engine: isEngine[1]}),
-                        title: isEngine[1] && t('引擎')
+                        title: isEngine[1] && t('Engine')
                     },
-                    playerNames[1] || t('白'),
+                    playerNames[1] || t('White'),
                     ' ',
                     isEngine[1] && playerBusy[1] && h(TextSpinner)
                 ), ' ',

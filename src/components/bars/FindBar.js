@@ -38,7 +38,7 @@ class FindBar extends Component {
                 h('input', {
                     ref: el => this.inputElement = el,
                     type: 'text',
-                    placeholder: t('查找'),
+                    placeholder: t('Find'),
                     value: findText,
                     onInput: this.handleChange
                 }),
@@ -47,14 +47,14 @@ class FindBar extends Component {
                     h('img', {
                         src: './node_modules/octicons/build/svg/chevron-down.svg',
                         height: 20,
-                        alt: t('下一步')
+                        alt: t('Next')
                     })
                 ),
                 h('button', {class: 'prev', onClick: this.handleButtonClick},
                     h('img', {
                         src: './node_modules/octicons/build/svg/chevron-up.svg',
                         height: 20,
-                        alt: t('上一步')
+                        alt: t('Previous')
                     })
                 )
             )

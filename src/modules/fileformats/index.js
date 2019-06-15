@@ -13,7 +13,7 @@ let extensions = Object.keys(modules).map(key => modules[key].meta)
 let combinedExtensions = [].concat(...extensions.map(x => x.extensions))
 
 exports.meta = [
-    {name: t('所有棋谱格式'), extensions: combinedExtensions},
+    {name: t('Game Records'), extensions: combinedExtensions},
     ...extensions
 ]
 
